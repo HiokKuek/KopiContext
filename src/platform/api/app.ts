@@ -3,6 +3,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import type { PublishedBriefing } from "@/modules/content/published-briefings";
 import type { EditorialReadRepository } from "@/modules/editorial/editorial-read-model";
 import type { SourceSubmissionReadRepository } from "@/modules/preparation/source-submission-read-model";
+import type { CandidateClaimAcceptanceContextQuery } from "@/modules/evidence/candidate-claim-acceptance-context";
 
 import {
   type PrivateServiceIdentity,
@@ -29,6 +30,7 @@ import {
 } from "./prepared-proposal-acceptance-route";
 import { registerSourceAcceptanceRoute, type SourceAcceptanceCommand } from "./source-acceptance-route";
 import { registerCandidateClaimAcceptanceRoute, type CandidateClaimAcceptanceCommand } from "./candidate-claim-acceptance-route";
+import { registerCandidateClaimAcceptanceContextRoute } from "./candidate-claim-context-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -37,6 +39,7 @@ export type PrivateApiDependencies = Readonly<{
   preparedProposalAcceptances?: PreparedProposalAcceptanceCommand;
   sourceAcceptances?: SourceAcceptanceCommand;
   candidateClaimAcceptances?: CandidateClaimAcceptanceCommand;
+  candidateClaimAcceptanceContexts?: CandidateClaimAcceptanceContextQuery;
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -180,6 +183,13 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
       notFound: () => new ApiError(404, "not_found", "The prepared proposal does not exist."),
       conflict: () => new ApiError(409, "conflict", "The proposal changed or this Claim acceptance conflicts with editorial evidence."),
       rejected: () => new ApiError(422, "validation_failed", "The candidate Claim cannot be accepted."), });
+  }
+  if (dependencies.candidateClaimAcceptanceContexts) {
+    registerCandidateClaimAcceptanceContextRoute(app, dependencies.candidateClaimAcceptanceContexts, {
+      invalid: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The requested Source Submission does not exist."),
+      unavailable: () => new ApiError(422, "validation_failed", "The Source Submission has no reviewable proposal."),
+    });
   }
 
   if (dependencies.editorialReadModels) {

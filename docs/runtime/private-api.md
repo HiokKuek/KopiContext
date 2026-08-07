@@ -108,6 +108,24 @@ AI prompts, and processor output never appear in either response. The future
 editor BFF must use the authenticated server-side session to decide whether to
 call these routes; it must never forward this credential to a browser.
 
+### Candidate-Claim evidence context
+
+`GET /v1/editorial/source-submissions/:submissionId/candidate-claim-context`
+is the BFF-only read contract for the narrow Candidate-Claim acceptance panel.
+It returns only a reviewable prepared/needs-review proposal, its indexed
+candidate Claims, agent-origin revisions created from that same Source
+Submission, and Sources accepted from that same Source Submission. Empty
+revision or Source lists are valid: they mean the BFF must keep Claim
+acceptance unavailable.
+
+The private DTO includes the proposal output fingerprint so a server action
+can construct a stale-safe command, but that fingerprint is not browser
+presentation data. The route returns `404 not_found` for an absent Source
+Submission and `422 validation_failed` when no prepared or needs-review
+proposal is available. It excludes submitted transcript/document text,
+retrieval and content fingerprints, worker leases/retries/errors, prompts,
+credentials, unrelated Submissions, and all other processor output.
+
 ## Source-submission command
 
 ### Accept a prepared classification and draft (Phase A)

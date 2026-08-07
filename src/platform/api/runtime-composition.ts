@@ -19,6 +19,7 @@ import { DrizzleSourceSubmissionReadRepository } from "@/platform/persistence/so
 import { DrizzleAcceptPreparedProposalRepository } from "@/platform/persistence/accept-prepared-proposal-repository";
 import { DrizzleAcceptSourceFromSubmissionRepository } from "@/platform/persistence/accept-source-from-submission-repository";
 import { DrizzleAcceptCandidateClaimRepository } from "@/platform/persistence/accept-candidate-claim-repository";
+import { DrizzleCandidateClaimAcceptanceContextRepository } from "@/platform/persistence/candidate-claim-acceptance-context-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -72,6 +73,7 @@ export function composePrivateApiRuntime(
   const preparedProposalAcceptances = new DrizzleAcceptPreparedProposalRepository(persistence.db);
   const sourceAcceptances = new DrizzleAcceptSourceFromSubmissionRepository(persistence.db);
   const candidateClaimAcceptances = new DrizzleAcceptCandidateClaimRepository(persistence.db);
+  const candidateClaimAcceptanceContexts = new DrizzleCandidateClaimAcceptanceContextRepository(persistence.db);
   const topicRequestDemands = new DrizzleTopicRequestDemandRepository(persistence.db);
   const sourceSubmissionIntake = new DrizzleSourceSubmissionIntakeRepository(persistence.db);
   const anonymousAnalyticsEvents = new DrizzleAnonymousAnalyticsRepository(persistence.db);
@@ -82,6 +84,7 @@ export function composePrivateApiRuntime(
     preparedProposalAcceptances: createAcceptPreparedProposalCommand(preparedProposalAcceptances),
     sourceAcceptances: createAcceptSourceFromSubmissionCommand(sourceAcceptances),
     candidateClaimAcceptances: createAcceptCandidateClaimCommand(candidateClaimAcceptances),
+    candidateClaimAcceptanceContexts,
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
