@@ -1,10 +1,18 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import type {
+  EditorialAuditRecord,
+  EditorialItem,
   EditorialStatus,
+  EditorialTransitionOutcome,
   EditorialTransitionSuccess,
 } from "@/modules/editorial/editorial-workflow";
+import {
+  EditorialTransitionConflictError,
+  type EditorialRepository,
+  type EditorialRevision,
+} from "../../modules/editorial/editorial-repository";
 import type {
   BriefingSource,
   PublishedBriefing,
@@ -189,19 +197,17 @@ export class DrizzleEditorialTransitionRepository implements EditorialTransition
     const occurredAt = new Date(transition.occurredAt);
 
     return this.db.transaction(async (transaction) => {
-      // The audit revision must belong to the Briefing whose state is changing.
+      // The audit revision must be both owned by, and still the newest revision
+      // of, the Briefing whose state is changing. This makes a command evaluated
+      // against an earlier draft a conflict instead of an audit on new content.
       const [revision] = await transaction
         .select({ id: briefingRevisions.id })
         .from(briefingRevisions)
-        .where(
-          and(
-            eq(briefingRevisions.id, transition.revisionId),
-            eq(briefingRevisions.briefingId, transition.briefingId),
-          ),
-        )
+        .where(eq(briefingRevisions.briefingId, transition.briefingId))
+        .orderBy(desc(briefingRevisions.sequence))
         .limit(1);
 
-      if (!revision) {
+      if (!revision || revision.id !== transition.revisionId) {
         return "conflict" as const;
       }
 
@@ -231,6 +237,207 @@ export class DrizzleEditorialTransitionRepository implements EditorialTransition
       return "persisted" as const;
     });
   }
+}
+
+/**
+ * Drizzle adapter for the Editorial Workflow's richer repository port. It
+ * keeps template interpretation at the persistence boundary, so the editorial
+ * domain receives only the facts it needs to make a transition decision.
+ */
+export class DrizzleEditorialRepository implements EditorialRepository {
+  private readonly transitions: DrizzleEditorialTransitionRepository;
+
+  constructor(private readonly db: NodePgDatabase) {
+    this.transitions = new DrizzleEditorialTransitionRepository(db);
+  }
+
+  async retrieveById(id: string): Promise<EditorialItem | undefined> {
+    const [briefing] = await this.db
+      .select({ id: briefings.id, status: briefings.status })
+      .from(briefings)
+      .where(eq(briefings.id, id))
+      .limit(1);
+    if (!briefing) return undefined;
+
+    const [revision] = await this.db
+      .select({
+        id: briefingRevisions.id,
+        templateVersion: briefingRevisions.templateVersion,
+        content: briefingRevisions.content,
+      })
+      .from(briefingRevisions)
+      .where(eq(briefingRevisions.briefingId, briefing.id))
+      .orderBy(desc(briefingRevisions.sequence))
+      .limit(1);
+    if (!revision) return undefined;
+
+    const claimRows = await this.db
+      .select({
+        claimId: claims.id,
+        supportId: claimSupports.id,
+        acceptedSourceId: acceptedSources.id,
+      })
+      .from(claims)
+      .leftJoin(claimSupports, eq(claimSupports.claimId, claims.id))
+      .leftJoin(acceptedSources, eq(acceptedSources.id, claimSupports.acceptedSourceId))
+      .where(eq(claims.briefingRevisionId, revision.id));
+
+    return mapEditorialItem({
+      id: briefing.id,
+      status: briefing.status,
+      revisionId: revision.id,
+      templateVersion: revision.templateVersion,
+      content: revision.content,
+      claimRows,
+    });
+  }
+
+  async persistTransition(outcome: EditorialTransitionOutcome): Promise<void> {
+    if (!outcome.ok) return;
+
+    const result = await this.transitions.persistTransition(
+      editorialTransitionPersistenceRequest(outcome),
+    );
+    if (result === "conflict") {
+      throw new EditorialTransitionConflictError(
+        `Cannot transition editorial item ${outcome.item.id}: the persisted item or revision changed after evaluation.`,
+      );
+    }
+  }
+
+  async retrieveRevisionById(id: string): Promise<EditorialRevision | undefined> {
+    const [revision] = await this.db
+      .select({
+        id: briefingRevisions.id,
+        itemId: briefingRevisions.briefingId,
+        sequence: briefingRevisions.sequence,
+        templateVersion: briefingRevisions.templateVersion,
+        content: briefingRevisions.content,
+        createdAt: briefingRevisions.createdAt,
+      })
+      .from(briefingRevisions)
+      .where(eq(briefingRevisions.id, id))
+      .limit(1);
+
+    return revision ? mapEditorialRevision(revision) : undefined;
+  }
+
+  async listRevisions(itemId: string): Promise<ReadonlyArray<EditorialRevision>> {
+    const revisions = await this.db
+      .select({
+        id: briefingRevisions.id,
+        itemId: briefingRevisions.briefingId,
+        sequence: briefingRevisions.sequence,
+        templateVersion: briefingRevisions.templateVersion,
+        content: briefingRevisions.content,
+        createdAt: briefingRevisions.createdAt,
+      })
+      .from(briefingRevisions)
+      .where(eq(briefingRevisions.briefingId, itemId))
+      .orderBy(asc(briefingRevisions.sequence));
+
+    return revisions.map(mapEditorialRevision);
+  }
+
+  async listAuditRecords(itemId: string): Promise<ReadonlyArray<EditorialAuditRecord>> {
+    const records = await this.db
+      .select({
+        itemId: editorialAuditRecords.briefingId,
+        revisionId: editorialAuditRecords.briefingRevisionId,
+        from: editorialAuditRecords.fromStatus,
+        to: editorialAuditRecords.toStatus,
+        actorId: editorialAuditRecords.actorId,
+        reason: editorialAuditRecords.reason,
+        occurredAt: editorialAuditRecords.occurredAt,
+      })
+      .from(editorialAuditRecords)
+      .where(eq(editorialAuditRecords.briefingId, itemId))
+      .orderBy(asc(editorialAuditRecords.occurredAt));
+
+    return records.map(mapEditorialAuditRecord);
+  }
+}
+
+export type EditorialItemDatabaseRecord = Readonly<{
+  id: string;
+  status: EditorialStatus;
+  revisionId: string;
+  templateVersion: string;
+  content: unknown;
+  claimRows: ReadonlyArray<Readonly<{
+    claimId: string;
+    supportId: string | null;
+    acceptedSourceId: string | null;
+  }>>;
+}>;
+
+/** Maps a normalised Briefing/revision/claim aggregate to the workflow port. */
+export function mapEditorialItem(record: EditorialItemDatabaseRecord): EditorialItem {
+  const claimsById = new Map<string, boolean>();
+  const acceptedSourceIds = new Set<string>();
+
+  for (const claim of record.claimRows) {
+    const hasAcceptedSupport = claim.supportId !== null && claim.acceptedSourceId !== null;
+    claimsById.set(claim.claimId, (claimsById.get(claim.claimId) ?? false) || hasAcceptedSupport);
+    if (claim.acceptedSourceId) acceptedSourceIds.add(claim.acceptedSourceId);
+  }
+
+  return {
+    id: record.id,
+    status: record.status,
+    revisionId: record.revisionId,
+    template: { isComplete: isCompleteBriefingTemplate(record.templateVersion, record.content) },
+    acceptedSources: [...acceptedSourceIds].map((id) => ({ id })),
+    claims: [...claimsById].map(([id, isSupported]) => ({ id, isSupported })),
+  };
+}
+
+type EditorialRevisionDatabaseRecord = Readonly<{
+  id: string;
+  itemId: string;
+  sequence: number;
+  templateVersion: string;
+  content: unknown;
+  createdAt: Date;
+}>;
+
+/** Converts immutable database JSON into a defensive Editorial Revision value. */
+export function mapEditorialRevision(record: EditorialRevisionDatabaseRecord): EditorialRevision {
+  if (!isRecord(record.content)) {
+    throw new Error(`Briefing revision ${record.id} has invalid non-object template content.`);
+  }
+
+  return {
+    id: record.id,
+    itemId: record.itemId,
+    sequence: record.sequence,
+    templateVersion: record.templateVersion,
+    content: structuredClone(record.content),
+    createdAt: record.createdAt.toISOString(),
+  };
+}
+
+type EditorialAuditDatabaseRecord = Readonly<{
+  itemId: string;
+  revisionId: string;
+  from: EditorialStatus;
+  to: EditorialStatus;
+  actorId: string;
+  reason: string | null;
+  occurredAt: Date;
+}>;
+
+/** Converts storage nullability into the workflow's optional audit reason. */
+export function mapEditorialAuditRecord(record: EditorialAuditDatabaseRecord): EditorialAuditRecord {
+  return {
+    itemId: record.itemId,
+    revisionId: record.revisionId,
+    from: record.from,
+    to: record.to,
+    actorId: record.actorId,
+    ...(record.reason === null ? {} : { reason: record.reason }),
+    occurredAt: record.occurredAt.toISOString(),
+  };
 }
 
 function asBriefingTemplateContent(value: unknown): BriefingTemplateContent | undefined {
@@ -276,6 +483,15 @@ function asBriefingTemplateContent(value: unknown): BriefingTemplateContent | un
     questionsToAsk: value.questionsToAsk,
     mistakesToAvoid: value.mistakesToAvoid,
   };
+}
+
+/**
+ * Editorial publication needs a binary answer rather than public rendering.
+ * Keep that answer aligned with the versioned template validator used by the
+ * reader, while treating unrecognised template versions as incomplete.
+ */
+export function isCompleteBriefingTemplate(templateVersion: string, content: unknown): boolean {
+  return templateVersion === "v1" && asBriefingTemplateContent(content) !== undefined;
 }
 
 function uniqueSources(sources: ReadonlyArray<BriefingSource>): ReadonlyArray<BriefingSource> {
