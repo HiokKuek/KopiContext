@@ -18,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="en-SG">
       <body>
         <a className="skip-link" href="#main-content">
-          Skip to briefing
+          Skip to main content
         </a>
         <Suspense fallback={null}>
           <AnalyticsPageView />

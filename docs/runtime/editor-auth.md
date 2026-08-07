@@ -42,4 +42,10 @@ actor ID from Google's stable subject (`google:<subject>`). Browser input never
 chooses that actor ID, and private API credentials remain server-only.
 
 This is the authentication foundation only. Protected editor pages and their
-server-side BFF composition follow in the workspace delivery slice.
+server-side BFF composition now begin at `/editor`. The route is dynamically
+server-rendered, calls `requireEditorSession()` before it loads anything, and
+redirects a missing session to Auth.js sign-in or an unapproved one to its
+denied state. Its review queue has no browser API route: the server-only BFF
+will use `PRIVATE_API_BASE_URL` and `PRIVATE_API_SERVICE_CREDENTIAL` only when
+the private `GET /v1/editorial/work` endpoint is composed. Until then, it
+shows an explicit unavailable state rather than an empty or fabricated queue.

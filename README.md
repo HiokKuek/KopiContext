@@ -43,6 +43,8 @@ Current code is deliberately small:
 - `src/platform/web/` owns server-only BFF adapters. The Topic-request route
   validates a single Topic again and forwards it through the authenticated
   private API client; it retains no reader identity or browser metadata.
+  The editor queue follows the same server-only seam and reports a truthful
+  unavailable state until its private read endpoint is composed.
 
 ## Run locally
 

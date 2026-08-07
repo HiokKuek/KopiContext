@@ -115,6 +115,33 @@ p { margin: 0 0 20px; }
 .topic-request-privacy, .topic-request-status { margin: 10px 0 0; font-size: .78rem; line-height: 1.45; }
 .topic-request-privacy { color: var(--color-muted); }
 .topic-request-status { min-height: 1.45em; color: var(--color-ink); font-weight: 650; }
+.editor-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 6px solid var(--color-ink); border-bottom: 1px solid var(--color-mist); padding: 14px max(20px, calc((100vw - 1180px) / 2)); font-family: var(--utility-face); }
+.editor-header .wordmark small { color: var(--color-muted); font-size: .7rem; font-weight: 650; letter-spacing: 0; }
+.editor-header nav { display: flex; align-items: center; gap: 14px; font-size: .8rem; }
+.editor-header nav a { color: var(--color-rain); font-weight: 750; }
+.editor-identity { max-width: 15rem; overflow: hidden; color: var(--color-muted); text-overflow: ellipsis; white-space: nowrap; }
+.editor-shell { width: min(100%, 980px); margin: 0 auto; padding: 44px 20px 84px; }
+.editor-intro { max-width: 760px; padding-bottom: 42px; }
+.editor-intro > p:last-child { max-width: 650px; margin: 18px 0 0; font-size: 1.14rem; }
+.review-path { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 22px; padding: 0; list-style: none; color: var(--color-muted); font-family: var(--utility-face); font-size: .73rem; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.review-path li { display: flex; align-items: center; gap: 16px; }
+.review-path li:not(:last-child)::after { width: 18px; border-top: 1px solid var(--color-mist); content: ""; }
+.review-path li[aria-current="step"] { color: var(--color-rain); }
+.editor-unavailable { max-width: 720px; border: 1px solid var(--color-mist); border-left: 4px solid var(--color-rain); padding: 28px; background: #fffdf8; }
+.editor-unavailable p:last-of-type { max-width: 590px; margin-bottom: 22px; color: var(--color-muted); }
+.editor-queue { max-width: 860px; border-top: 2px solid var(--color-ink); padding-top: 24px; }
+.queue-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; }
+.queue-heading > p { margin: 0 0 18px; color: var(--color-muted); font-family: var(--utility-face); font-size: .82rem; }
+.editor-queue-list { margin: 26px 0 0; padding: 0; list-style: none; }
+.editor-queue-list li { border-top: 1px solid var(--color-mist); }
+.editor-queue-list li:last-child { border-bottom: 1px solid var(--color-mist); }
+.editor-queue-list a { display: block; padding: 21px 0; text-decoration: none; }
+.editor-queue-list a:hover h3 { color: var(--color-rain); text-decoration: underline; text-underline-offset: .14em; }
+.editor-queue-list h3 { margin-bottom: 5px; font-family: var(--reading-face); font-size: 1.3rem; }
+.editor-queue-list p:last-child { margin: 0; color: var(--color-muted); font-family: var(--utility-face); font-size: .82rem; line-height: 1.5; }
+.queue-topic { margin: 0 0 4px; color: var(--color-rain); font-family: var(--utility-face); font-size: .72rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.status-token { display: inline-block; border: 1px solid var(--color-mist); border-radius: 999px; padding: 1px 7px; color: var(--color-ink); font-size: .71rem; font-weight: 800; text-transform: capitalize; }
+.editor-empty { border-top: 1px solid var(--color-mist); padding: 20px 0; color: var(--color-muted); }
 @media (min-width: 540px) { .topic-request-controls { grid-template-columns: minmax(0, 1fr) auto; } .topic-request-controls button { min-width: 172px; } }
 @media (min-width: 760px) { .briefing-shell { padding-top: 72px; } .government-map { grid-template-columns: minmax(0, .85fr) minmax(350px, 1.15fr); align-items: center; gap: 44px; } .branch-diagram ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 31px; padding-top: 18px; } .branch-diagram ol::before { top: 0; right: 16.66%; bottom: auto; left: 16.66%; width: auto; height: 2px; } .branch-diagram li { min-height: 118px; padding: 22px 14px 14px; } .branch-diagram li::before { top: -22px; left: 50%; width: 2px; height: 21px; border-top: 0; border-left: 2px solid var(--color-mist); } .branch-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } .context-pair, .participate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 980px) { .reading-grid { grid-template-columns: 190px minmax(0, 730px); gap: 64px; } .conversation-path { position: sticky; top: 24px; align-self: start; overflow: visible; border-bottom: 0; padding: 4px 0 0; } .conversation-path ol { display: block; width: auto; } .conversation-path li { min-width: 0; border-left: 2px solid var(--color-mist); } .conversation-path a { padding: 0 0 20px 16px; } }
