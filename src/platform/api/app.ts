@@ -28,6 +28,7 @@ import {
   type PreparedProposalAcceptanceCommand,
 } from "./prepared-proposal-acceptance-route";
 import { registerSourceAcceptanceRoute, type SourceAcceptanceCommand } from "./source-acceptance-route";
+import { registerCandidateClaimAcceptanceRoute, type CandidateClaimAcceptanceCommand } from "./candidate-claim-acceptance-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -35,6 +36,7 @@ export type PrivateApiDependencies = Readonly<{
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
   preparedProposalAcceptances?: PreparedProposalAcceptanceCommand;
   sourceAcceptances?: SourceAcceptanceCommand;
+  candidateClaimAcceptances?: CandidateClaimAcceptanceCommand;
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -171,6 +173,13 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
       conflict: () => new ApiError(409, "conflict", "The proposal changed or this Source acceptance conflicts with existing evidence."),
       rejected: () => new ApiError(422, "validation_failed", "The Source cannot be accepted from this submission."),
     });
+  }
+  if (dependencies.candidateClaimAcceptances) {
+    registerCandidateClaimAcceptanceRoute(app, { candidateClaimAcceptances: dependencies.candidateClaimAcceptances, now,
+      invalid: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The prepared proposal does not exist."),
+      conflict: () => new ApiError(409, "conflict", "The proposal changed or this Claim acceptance conflicts with editorial evidence."),
+      rejected: () => new ApiError(422, "validation_failed", "The candidate Claim cannot be accepted."), });
   }
 
   if (dependencies.editorialReadModels) {

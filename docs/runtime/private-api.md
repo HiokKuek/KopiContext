@@ -175,6 +175,17 @@ It returns `201` with `{ kind: "created", acceptedSourceId, decisionId }`, or
 canonical URLs, and idempotency collisions return the stable `409 conflict`
 envelope. It cannot create a Claim, change a Briefing, or publish content.
 
+### Accept a candidate Claim (Phase B2)
+
+`POST /v1/editorial/source-submissions/:submissionId/candidate-claims/acceptance`
+is the private BFF command for accepting exactly one candidate Claim. It
+requires the opaque command key, server-derived actor, proposal fingerprint,
+zero-based candidate index, target Briefing revision UUID, and already accepted
+Source UUID. It returns `201` with the Claim, Claim-support, and decision IDs,
+or `200` for an idempotent replay. A stale proposal, missing target revision,
+missing Source, or idempotency collision is a stable `409 conflict`; the route
+never accepts a browser-supplied timestamp or publishes a Briefing.
+
 ### Review prepared proposals
 
 `GET /v1/editorial/source-submissions/:submissionId` is a private,
