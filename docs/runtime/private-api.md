@@ -169,10 +169,17 @@ proposed Topic/Subtopic placement, confidence/rationale, candidate Claims with
 excerpts, and a structured draft proposal. Every one of these values is a
 suggestion: it is not an accepted Source or Claim, canonical taxonomy,
 editorial revision, or published content. Its server projection excludes raw
-material, processor prompts, fingerprints, leases, retries, and worker error
-internals. The protected `/editor/source-submissions/:submissionId` page uses
-the contract through a server-only BFF and exposes no acceptance command until
-that explicit workflow exists.
+material, processor prompts, leases, retries, and worker error internals. It
+includes only a stable prepared-output fingerprint so the editor BFF can make
+an explicit optimistic-concurrency acceptance decision.
+
+The protected `/editor/source-submissions/:submissionId` page may accept the
+classification and structured draft into a **new Draft Briefing** only after an
+explicit confirmation and editor-supplied Topic description. Its same-origin
+Server Action re-authenticates, derives the actor ID, passes the exact projected
+fingerprint, and calls the private acceptance endpoint once. That acceptance
+does not accept a Source, verify candidate Claims, or publish content; the
+editor is redirected to the new draft Briefing review to continue those steps.
 
 ## Source Submission editorial reads
 
