@@ -257,6 +257,22 @@ export const humanRevisionCreationRecords = pgTable(
   ],
 );
 
+/** Durable receipts for an editor creating the first Draft in a Topic. */
+export const editorialDraftCreationRecords = pgTable(
+  "editorial_draft_creation_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    topicId: uuid("topic_id").notNull().references(() => topics.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingId: uuid("briefing_id").notNull().references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingRevisionId: uuid("briefing_revision_id").notNull().references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    actorId: text("actor_id").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt,
+  },
+  (table) => [index("editorial_draft_creation_records_topic_occurred_idx").on(table.topicId, table.occurredAt), check("editorial_draft_creation_records_actor_not_empty", sql`length(${table.actorId}) > 0`)],
+);
+
 /**
  * Material awaiting assessment. It preserves original material and processing
  * provenance but cannot support a Claim unless it becomes an Accepted Source.
