@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Next.js build output and generated types
+.next/
+next-env.d.ts
+out/
+
+# Test and tooling output
+coverage/
+.vitest/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# Deployment and local environment configuration
+.vercel/
+.env*.local
