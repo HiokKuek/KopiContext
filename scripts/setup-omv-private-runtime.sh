@@ -245,9 +245,10 @@ for key in POSTGRES_PASSWORD POSTGRES_MIGRATION_PASSWORD POSTGRES_API_PASSWORD P
 done
 MIGRATION_DATABASE_URL="postgres://${POSTGRES_MIGRATION_USER}:${POSTGRES_MIGRATION_PASSWORD}@postgres:5432/${POSTGRES_DB}"
 DATABASE_URL="postgres://${POSTGRES_API_USER}:${POSTGRES_API_PASSWORD}@postgres:5432/${POSTGRES_DB}"
-install -d -m 700 /etc/kopicontext
+install -d -m 750 -o root -g kopi-deploy /etc/kopicontext
 touch "$RUNTIME_ENV_FILE"
-chmod 600 "$RUNTIME_ENV_FILE"
+chown root:kopi-deploy "$RUNTIME_ENV_FILE"
+chmod 640 "$RUNTIME_ENV_FILE"
 write_env POSTGRES_DB "$POSTGRES_DB"
 write_env POSTGRES_USER "$POSTGRES_USER"
 write_env POSTGRES_PASSWORD "$POSTGRES_PASSWORD"
@@ -278,7 +279,8 @@ ask PRIVATE_API_BASE_URL "Public HTTPS hostname [for example https://api.example
 [[ -n "$TUNNEL_TOKEN" && -n "$PRIVATE_API_BASE_URL" ]] || { warn "The tunnel token and hostname are required."; exit 1; }
 ENV_FILE="$TUNNEL_ENV_FILE"
 touch "$TUNNEL_ENV_FILE"
-chmod 600 "$TUNNEL_ENV_FILE"
+chown root:kopi-deploy "$TUNNEL_ENV_FILE"
+chmod 640 "$TUNNEL_ENV_FILE"
 write_env TUNNEL_TOKEN "$TUNNEL_TOKEN"
 write_env KOPI_PRIVATE_API_NETWORK "kopicontext-private_private_api"
 ENV_FILE="$RUNTIME_ENV_FILE"
