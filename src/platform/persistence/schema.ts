@@ -493,6 +493,37 @@ export const currentUpdateCreationRecords = pgTable(
   (table) => [check("current_update_creation_records_actor_not_empty", sql`length(${table.actorId}) > 0`)],
 );
 
+/** Retry receipts for attaching an Accepted Source to a draft Current Update. */
+export const currentUpdateSupportAcceptanceRecords = pgTable(
+  "current_update_support_acceptance_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    currentUpdateId: uuid("current_update_id")
+      .notNull()
+      .references(() => currentUpdates.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    acceptedSourceId: uuid("accepted_source_id")
+      .notNull()
+      .references(() => acceptedSources.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    currentUpdateSupportId: uuid("current_update_support_id")
+      .notNull()
+      .references(() => currentUpdateSupports.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    actorId: text("actor_id").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    index("current_update_support_acceptance_records_update_occurred_idx").on(
+      table.currentUpdateId,
+      table.occurredAt,
+    ),
+    check(
+      "current_update_support_acceptance_records_actor_not_empty",
+      sql`length(${table.actorId}) > 0`,
+    ),
+  ],
+);
+
 /**
  * Append-only receipts for editor-authored Claims. A receipt is separate from
  * the Claim itself so a retried browser submission cannot duplicate evidence.
