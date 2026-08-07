@@ -49,3 +49,11 @@ denied state. Its review queue has no browser API route: the server-only BFF
 will use `PRIVATE_API_BASE_URL` and `PRIVATE_API_SERVICE_CREDENTIAL` only when
 the private `GET /v1/editorial/work` endpoint is composed. Until then, it
 shows an explicit unavailable state rather than an empty or fabricated queue.
+
+`/editor/briefings/:briefingId` uses the authenticated private detail query.
+Its decision panel is a same-origin Server Action: every POST calls
+`requireEditorSession()` again, validates only a workflow action/reason and
+explicit publication confirmation, then constructs the private request with
+the session-derived `google:<subject>` actor. The action calls the private API
+once and returns only a safe success, rejection, or unavailable result to the
+browser.

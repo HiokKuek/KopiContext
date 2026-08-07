@@ -44,7 +44,13 @@ Current code is deliberately small:
   validates a single Topic again and forwards it through the authenticated
   private API client; it retains no reader identity or browser metadata.
   The editor queue follows the same server-only seam and reports a truthful
-  unavailable state until its private read endpoint is composed.
+  unavailable state until its private read endpoint is composed. Editor
+  Briefing review and transition actions are also server-only BFFs: each
+  mutation derives its audit actor from the Auth.js session and calls the
+  private API once.
+  The protected Source Submission form similarly derives the editor identity
+  and provenance server-side, then queues material through the private API;
+  browsers receive only a safe queue acknowledgement.
 
 ## Run locally
 

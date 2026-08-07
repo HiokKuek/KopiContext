@@ -13,15 +13,7 @@ export function EditorWorkspace({
 }>) {
   return (
     <>
-      <header className="editor-header">
-        <Link className="wordmark" href="/editor" aria-label="KopiContext editor home">
-          Kopi<span>Context</span> <small>editor</small>
-        </Link>
-        <nav aria-label="Editor account">
-          <span className="editor-identity">{editor.email}</span>
-          <Link href="/api/auth/signout?callbackUrl=/">Sign out</Link>
-        </nav>
-      </header>
+      <EditorHeader editor={editor} />
 
       <main id="main-content" className="editor-shell">
         <header className="editor-intro">
@@ -42,6 +34,18 @@ export function EditorWorkspace({
       </main>
     </>
   );
+}
+
+export function EditorHeader({ editor }: Readonly<{ editor: EditorIdentity }>) {
+  return <header className="editor-header">
+    <Link className="wordmark" href="/editor" aria-label="KopiContext editor home">
+      Kopi<span>Context</span> <small>editor</small>
+    </Link>
+    <nav aria-label="Editor account">
+      <span className="editor-identity">{editor.email}</span>
+      <Link href="/api/auth/signout?callbackUrl=/">Sign out</Link>
+    </nav>
+  </header>;
 }
 
 function UnavailableQueue() {
