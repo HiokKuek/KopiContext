@@ -125,6 +125,24 @@ AI prompts, and processor output never appear in either response. The future
 editor BFF must use the authenticated server-side session to decide whether to
 call these routes; it must never forward this credential to a browser.
 
+### Human revision creation
+
+`POST /v1/editorial/briefings/:briefingId/revisions` creates one immutable,
+human-origin Template v1 revision from the current **Draft** revision. The
+Vercel BFF derives `actorId` from the authenticated editor session and supplies
+an opaque idempotency key plus the revision ID it displayed. The private API
+rechecks that expected current revision while holding the Briefing aggregate
+lock; concurrent edits therefore return `409 conflict` instead of allocating
+the same sequence or overwriting work.
+
+The body may contain only `idempotencyKey`, `expectedRevisionId`, `actorId`,
+structured `content`, and an optional editorial `note`. It cannot carry a
+Source Submission, provider/model field, agent output, or a caller-selected
+origin. Revisions are structurally valid Template v1 snapshots; an incomplete
+Draft can be saved, but the existing editorial workflow still refuses to
+publish until the required Template sections and source-backed Claims are
+complete.
+
 ### Candidate-Claim evidence context
 
 `GET /v1/editorial/source-submissions/:submissionId/candidate-claim-context`

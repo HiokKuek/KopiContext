@@ -31,6 +31,7 @@ import {
 import { registerSourceAcceptanceRoute, type SourceAcceptanceCommand } from "./source-acceptance-route";
 import { registerCandidateClaimAcceptanceRoute, type CandidateClaimAcceptanceCommand } from "./candidate-claim-acceptance-route";
 import { registerCandidateClaimAcceptanceContextRoute } from "./candidate-claim-context-route";
+import { registerHumanRevisionRoute, type HumanRevisionRouteDependencies } from "./human-revision-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -40,6 +41,7 @@ export type PrivateApiDependencies = Readonly<{
   sourceAcceptances?: SourceAcceptanceCommand;
   candidateClaimAcceptances?: CandidateClaimAcceptanceCommand;
   candidateClaimAcceptanceContexts?: CandidateClaimAcceptanceContextQuery;
+  humanRevisions?: HumanRevisionRouteDependencies["humanRevisions"];
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -189,6 +191,16 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
       invalid: (message) => new ApiError(400, "invalid_request", message),
       notFound: () => new ApiError(404, "not_found", "The requested Source Submission does not exist."),
       unavailable: () => new ApiError(422, "validation_failed", "The Source Submission has no reviewable proposal."),
+    });
+  }
+  if (dependencies.humanRevisions) {
+    registerHumanRevisionRoute(app, {
+      humanRevisions: dependencies.humanRevisions,
+      now,
+      invalid: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The requested Briefing does not exist."),
+      conflict: () => new ApiError(409, "conflict", "The Briefing changed or this revision request conflicts with existing editorial work."),
+      rejected: () => new ApiError(422, "validation_failed", "The human Briefing revision cannot be created."),
     });
   }
 

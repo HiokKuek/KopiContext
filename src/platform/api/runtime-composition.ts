@@ -20,6 +20,8 @@ import { DrizzleAcceptPreparedProposalRepository } from "@/platform/persistence/
 import { DrizzleAcceptSourceFromSubmissionRepository } from "@/platform/persistence/accept-source-from-submission-repository";
 import { DrizzleAcceptCandidateClaimRepository } from "@/platform/persistence/accept-candidate-claim-repository";
 import { DrizzleCandidateClaimAcceptanceContextRepository } from "@/platform/persistence/candidate-claim-acceptance-context-repository";
+import { DrizzleHumanRevisionRepository } from "@/platform/persistence/human-revision-repository";
+import { createHumanRevisionCommand } from "@/modules/editorial/create-human-revision-command";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -85,6 +87,7 @@ export function composePrivateApiRuntime(
     sourceAcceptances: createAcceptSourceFromSubmissionCommand(sourceAcceptances),
     candidateClaimAcceptances: createAcceptCandidateClaimCommand(candidateClaimAcceptances),
     candidateClaimAcceptanceContexts,
+    humanRevisions: createHumanRevisionCommand(new DrizzleHumanRevisionRepository(persistence.db)),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),

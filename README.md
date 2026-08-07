@@ -78,7 +78,8 @@ The project already includes:
 - A durable editorial workflow, audit trail, private editorial queries, and
   protected review screens.
 - Source Submission intake, durable preparation outcomes, and a retrying
-  worker foundation.
+  private worker runtime that remains disabled until a reviewed provider
+  adapter is configured.
 - Production/private-runtime composition, checked-in Postgres migrations, and
   a private-server container package.
 
@@ -123,6 +124,7 @@ back to `DATABASE_URL`; see the [persistence runbook](docs/runtime/persistence.m
 | Need | Start here |
 | --- | --- |
 | Product purpose, scope, and success criteria | [Product foundation PRD](docs/prd/0001-product-foundation.md) |
+| The 25-Topic controlled-launch completion gate and editorial source plan | [Launch catalogue](docs/product/launch-catalogue.md) and [launch content inventory](docs/product/launch-content-inventory.md) |
 | All approved product decisions | [PRD index](docs/prd/README.md) and [ADRs](docs/adr/) |
 | Voice, reader experience, and editor design | [Briefing experience](docs/design/briefing-experience.md) and [editor workspace v1](docs/design/editor-workspace-v1.md) |
 | Editorial states and approval rules | [Editorial workflow PRD](docs/prd/0003-editorial-workflow.md) |
