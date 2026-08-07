@@ -1,4 +1,5 @@
 import { asc, desc, eq } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { SourceSubmissionReadRepository, SourceSubmissionReview } from "@/modules/preparation/source-submission-read-model";
 import { sourceSubmissions } from "./schema";
@@ -14,7 +15,7 @@ export class DrizzleSourceSubmissionReadRepository implements SourceSubmissionRe
     const [row] = await this.db.select().from(sourceSubmissions).where(eq(sourceSubmissions.id, id)).limit(1);
     if (!row) return undefined;
     const output = proposal(row.processorOutput);
-    return { id: row.id, kind: row.kind, originalIdentifier: row.originalIdentifier, submittedBy: row.submittedBy, submittedAt: row.submittedAt.toISOString(), rightsNote: row.rightsNote, processingStatus: row.processingStatus, ...(row.preparationResultState ? { resultState: row.preparationResultState } : {}), ...(row.retrievedAt ? { retrievedAt: row.retrievedAt.toISOString() } : {}), ...(output ? { proposal: output } : {}) };
+    return { id: row.id, kind: row.kind, originalIdentifier: row.originalIdentifier, submittedBy: row.submittedBy, submittedAt: row.submittedAt.toISOString(), rightsNote: row.rightsNote, processingStatus: row.processingStatus, ...(row.preparationResultState ? { resultState: row.preparationResultState } : {}), ...(row.retrievedAt ? { retrievedAt: row.retrievedAt.toISOString() } : {}), ...(row.processorOutput ? { preparedOutputFingerprint: fingerprint(row.processorOutput) } : {}), ...(output ? { proposal: output } : {}) };
   }
 }
 function proposal(value: unknown): SourceSubmissionReview["proposal"] | undefined {
@@ -26,3 +27,4 @@ function proposal(value: unknown): SourceSubmissionReview["proposal"] | undefine
   return {proposedTopic:c.proposedTopic, ...(typeof c.proposedSubtopic==="string"?{proposedSubtopic:c.proposedSubtopic}:{}),confidence:c.confidence,rationale:c.rationale,candidateClaims:claims,draft:{templateVersion:d.templateVersion,title:d.title,sections}};
 }
 function record(value: unknown): value is Record<string,unknown> { return typeof value==="object"&&value!==null&&!Array.isArray(value); }
+function fingerprint(value: unknown): string { return `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`; }

@@ -182,7 +182,9 @@ The queue contains only identity, kind, identifier, time, status, and attempt
 count. The detail projection includes rights/provenance and an advisory
 proposal when available. It excludes raw submitted material, content
 fingerprints, provider prompts, worker leases, retry schedules, and internal
-errors. Neither query accepts Sources or publishes content.
+errors. Detail responses include a SHA-256 fingerprint of prepared output when
+one exists, so the editor can identify the reviewed proposal without exposing
+additional worker output. Neither query accepts Sources or publishes content.
 
 In production, `POST /v1/source-submissions` accepts a private, idempotent
 submission and durably queues it. Its body is deliberately explicit so the original identifier,
