@@ -64,6 +64,13 @@
       "when": 1786077109695,
       "tag": "0008_source-proposal-acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1786077332676,
+      "tag": "0009_candidate-claim-acceptance",
+      "breakpoints": true
     }
   ]
 }
