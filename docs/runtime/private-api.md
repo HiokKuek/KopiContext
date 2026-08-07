@@ -61,6 +61,23 @@ exercise source preparation locally, call
 composition with registered transcript fixtures; do not add it as a silent
 `api:start` default.
 
+## Source-preparation worker
+
+`pnpm worker:start` is a separate private process, not an API route. It uses
+the durable Submission queue and preparation repository, but it cannot be
+started with a local placeholder or an implicitly selected provider. Startup
+requires `DATABASE_URL`, `SOURCE_PREPARATION_WORKER_ID`, and a reviewed,
+image-packaged `SOURCE_PREPARATION_ADAPTER_MODULE` `file:` URL. The module
+must explicitly supply both retrieval and AI adapters. If either configuration
+or module validation fails, the process exits before it opens Postgres or
+claims a Submission.
+
+The worker calls the source-preparation application boundary directly and
+persists only its advisory outcome. It never runs within Fastify or Next.js,
+and no browser request can trigger retrieval or AI work. See the
+[private-server deployment runbook](private-server-deployment.md#source-preparation-worker)
+for the opt-in Compose profile and provider-review requirements.
+
 The service binds to `127.0.0.1:3001` by default. `PRIVATE_API_HOST` and
 `PRIVATE_API_PORT` can override those values. In a deployed environment, the
 process stays behind the private HTTPS boundary described in ADR 0002.
@@ -280,12 +297,11 @@ retrieval adapter. It is never returned by public content, editor review
 queries, queue acknowledgements, logs, fingerprints, or analytics. URL and
 document submissions reject transcript text.
 
-The later private worker must atomically claim `submitted` records by moving
-them to `processing`, then use the source-preparation application seam and its
-durable result store to finalise the same record. Its retrieval and provider
-ports remain intentionally uncomposed until rights-cleared provider adapters,
-queue scheduling, retry policy, and operational monitoring have been reviewed.
-Do not add retrieval or AI calls to this HTTP command.
+The private worker atomically claims `submitted` records by moving them to
+`processing`, then uses the source-preparation application seam and its durable
+result store to finalise the same record. Its retrieval and provider ports are
+intentionally unconfigured until rights-cleared adapters have been reviewed and
+packaged. Do not add retrieval or AI calls to this HTTP command.
 
 ## Local development source preparation
 
@@ -304,12 +320,12 @@ or an external AI provider.
   proposal and records that no external AI was called. It cannot generate a
   production draft, accept Sources, alter taxonomy, or publish.
 
-This adapter is not automatically composed by `api:start`, and must never be
-used as production provider wiring. The production runtime now provides durable
-Source Submission intake only. It still needs reviewed retrieval, provider,
-worker claim/scheduling, retry, and operational adapters before it can prepare
-material. Until those are composed, the queued submission remains pending
-rather than being processed by a placeholder workflow.
+This adapter is not automatically composed by `api:start` or `worker:start`,
+and must never be used as production provider wiring. The private worker has
+durable claim, retry, escalation, and result-persistence adapters, but it does
+not start until reviewed retrieval and AI ports are packaged. Until then, the
+queued submission remains pending rather than being processed by a placeholder
+workflow.
 
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.

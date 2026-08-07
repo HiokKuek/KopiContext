@@ -2,8 +2,9 @@
 
 This package implements the approved Vercel-web/private-runtime split without
 creating infrastructure or credentials. The private server runs Postgres,
-migrations, and Fastify. There is no composed worker entrypoint yet, so this
-package deliberately does not invent a worker container.
+migrations, Fastify, and—only after an approved provider adapter is packaged—a
+separate source-preparation worker. The worker is a private process, never an
+HTTP route and never part of the Vercel deployment.
 
 ## Package and boundary
 
@@ -13,7 +14,9 @@ package deliberately does not invent a worker container.
 - `compose.private-runtime.yaml` has Postgres, a one-off migration job, and
   Fastify. It contains **no host `ports:`**. Postgres is internal-only; Fastify
   is available only on the private Docker network to an explicitly attached
-  authenticated tunnel/reverse proxy.
+  authenticated tunnel/reverse proxy. Its `worker` service is behind the
+  `source-preparation` profile, has no port, and only joins the private data
+  network.
 - `deploy/private-runtime.env.example` documents names only. Put a populated
   file outside Git and never paste secrets into chat, issues, or source.
 
@@ -35,6 +38,31 @@ Engine and the Compose plugin. Create separate Postgres roles before traffic:
 Generate a high-entropy `PRIVATE_API_SERVICE_CREDENTIAL`. It is shared only by
 Fastify and Vercel server-side code, not the browser or editor session. Never
 put any database URL, SSH credential, or Postgres bootstrap variable in Vercel.
+
+### Source-preparation worker
+
+The generic worker deliberately has no default retrieval or AI provider. It
+will exit before opening Postgres or claiming work unless all of the following
+are set in the private-server environment:
+
+- `SOURCE_PREPARATION_WORKER_ID`: a stable, unique identifier for this worker
+  instance;
+- `SOURCE_PREPARATION_ADAPTER_MODULE`: a `file:` URL to a reviewed adapter
+  packaged in the private image; and
+- `DATABASE_URL`: the private DML connection already used by the API.
+
+The adapter module must export `createSourcePreparationAdapters()`, returning
+the retrieval and AI ports defined by the application. It may read its own
+server-only provider credentials, but it must never add them to a web
+environment, logs, prepared output, or a browser response. A provider change
+is a reviewed code-and-image change: do not mount an ad-hoc script or point at
+a remote module URL. The runtime rejects non-`file:` URLs and malformed
+adapter modules before a queue lease is claimed.
+
+While no approved adapter exists, leave the worker profile disabled. Queued
+Submissions remain durable and are not marked failed merely because the worker
+is not configured. This is intentional: a human can still inspect or manage
+the intake without a model silently producing placeholder proposals.
 
 ## Controlled startup
 
@@ -60,6 +88,22 @@ container/network after rollout; never add a public health port:
 docker compose --env-file /etc/kopicontext/private-runtime.env -f compose.private-runtime.yaml exec api \
   node -e "fetch('http://127.0.0.1:3001/v1/healthz',{headers:{Authorization:'Bearer '+process.env.PRIVATE_API_SERVICE_CREDENTIAL}}).then(r=>{console.log(r.status);process.exit(r.ok?0:1)})"
 ```
+
+After a reviewed adapter has been included in the image and its environment
+values have been configured, opt in to the worker separately:
+
+```sh
+docker compose --env-file /etc/kopicontext/private-runtime.env \
+  -f compose.private-runtime.yaml --profile source-preparation up -d --build
+docker compose --env-file /etc/kopicontext/private-runtime.env \
+  -f compose.private-runtime.yaml logs worker
+```
+
+The worker claims at most one Submission at a time with a lease, persists its
+terminal result through the same Postgres aggregate, retries unexpected
+adapter failures with the bounded policy, and escalates after the attempt
+limit. It cannot call Fastify, accept a Source or Claim, create taxonomy, or
+publish content. Retrieval/model work therefore remains off the request path.
 
 ## Private ingress and Vercel handoff
 
@@ -94,6 +138,11 @@ do not put those credentials in browser-visible configuration.
 5. If the app rollout fails, return Vercel to its prior deployment. Roll API
    images back only after schema compatibility review; never restore/downgrade
    a database solely to undo an application image.
+
+If enabling source preparation, additionally confirm the worker starts with a
+reviewed adapter, submits no browser-visible provider data, and processes a
+rights-cleared staging transcript into a reviewable suggestion only. Verify
+the editor must still perform Source, Claim, and publication decisions.
 
 The API currently accepts one service credential. Schedule a brief maintenance
 window for credential rotation until an explicitly reviewed overlap mechanism

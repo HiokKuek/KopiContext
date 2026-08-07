@@ -54,6 +54,26 @@ services:
       retries: 5
       start_period: 15s
 
+  # Intentionally opt-in: an operator must first build a reviewed retrieval/AI
+  # adapter into the image and set its local file URL. It has no HTTP port.
+  worker:
+    profiles: ["source-preparation"]
+    build: { context: ., dockerfile: Dockerfile.private-api }
+    image: kopi-context-private-api:local
+    command: ["pnpm", "worker:start"]
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "${DATABASE_URL:?set in private env file}"
+      SOURCE_PREPARATION_WORKER_ID: "${SOURCE_PREPARATION_WORKER_ID:?set in private env file}"
+      SOURCE_PREPARATION_ADAPTER_MODULE: "${SOURCE_PREPARATION_ADAPTER_MODULE:?set in private env file}"
+      SOURCE_PREPARATION_WORKER_POLL_INTERVAL_MS: "${SOURCE_PREPARATION_WORKER_POLL_INTERVAL_MS:-1000}"
+      SOURCE_PREPARATION_WORKER_LEASE_MS: "${SOURCE_PREPARATION_WORKER_LEASE_MS:-60000}"
+      SOURCE_PREPARATION_WORKER_MAX_ATTEMPTS: "${SOURCE_PREPARATION_WORKER_MAX_ATTEMPTS:-3}"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    networks: [private_data]
+
 volumes:
   postgres-data:
 

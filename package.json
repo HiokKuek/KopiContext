@@ -19,7 +19,8 @@
     "db:migrate": "tsx src/platform/persistence/migrate.ts",
     "db:test:migrate": "tsx src/platform/persistence/migrate-test.ts",
     "test:postgres": "vitest run --config vitest.postgres.config.mts",
-    "api:start": "tsx src/platform/api/runtime.ts"
+    "api:start": "tsx src/platform/api/runtime.ts",
+    "worker:start": "tsx src/platform/worker/runtime.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
