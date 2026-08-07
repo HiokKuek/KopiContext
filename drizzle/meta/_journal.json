@@ -50,6 +50,20 @@
       "when": 1786076282943,
       "tag": "0006_proposal-decision-acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1786077071388,
+      "tag": "0007_source-submission-transcript-text",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1786077109695,
+      "tag": "0008_source-proposal-acceptance",
+      "breakpoints": true
     }
   ]
 }

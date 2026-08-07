@@ -9,12 +9,14 @@ import {
   fingerprintProposalOutput,
 } from "@/modules/editorial/accept-prepared-proposal-command";
 import { createTopicRequestCommand } from "@/modules/discovery/topic-request-command";
+import { createAcceptSourceFromSubmissionCommand } from "@/modules/evidence/accept-source-from-submission-command";
 
 import {
   DrizzleEditorialRepository,
   DrizzlePublishedCatalogueRepository,
 } from "./content-repositories";
 import { DrizzleAcceptPreparedProposalRepository } from "./accept-prepared-proposal-repository";
+import { DrizzleAcceptSourceFromSubmissionRepository } from "./accept-source-from-submission-repository";
 import { DrizzleTopicRequestDemandRepository } from "./topic-request-repository";
 import { createPostgresPersistence, type PostgresPersistence } from "./postgres";
 import {
@@ -242,6 +244,39 @@ describe("Postgres editorial workflow", () => {
     await expect(
       persistence.db.select().from(acceptedSources).where(eq(acceptedSources.acceptedFromSubmissionId, submissionId)),
     ).resolves.toEqual([]);
+    await expect(
+      persistence.db.select().from(claims).where(eq(claims.briefingRevisionId, first.revisionId)),
+    ).resolves.toEqual([]);
+
+    const sourceAcceptance = await createAcceptSourceFromSubmissionCommand(
+      new DrizzleAcceptSourceFromSubmissionRepository(persistence.db),
+    ).accept({
+      idempotencyKey: `source-acceptance:${runId}`,
+      submissionId,
+      expectedOutputFingerprint: fingerprintProposalOutput(proposal),
+      actorId: "postgres-integration-test",
+      occurredAt: "2026-08-08T10:01:00.000Z",
+      source: {
+        title: "Postgres test source",
+        publisher: "KopiContext test harness",
+        sourceType: "test",
+        canonicalUrl: `https://example.test/proposals/${runId}`,
+        retrievedAt: "2026-08-08T09:01:00.000Z",
+        relation: "Supports later verification.",
+        rightsNote: "Test fixture only.",
+      },
+    });
+    expect(sourceAcceptance).toMatchObject({ ok: true, kind: "created" });
+    if (!sourceAcceptance.ok) throw new Error("The editor should be able to accept the Source.");
+    await expect(
+      persistence.db.select().from(proposalDecisionRecords).where(eq(proposalDecisionRecords.id, sourceAcceptance.decisionId)),
+    ).resolves.toContainEqual(expect.objectContaining({
+      proposalPart: "source",
+      acceptedSourceId: sourceAcceptance.acceptedSourceId,
+      topicId: null,
+      briefingId: null,
+      briefingRevisionId: null,
+    }));
     await expect(
       persistence.db.select().from(claims).where(eq(claims.briefingRevisionId, first.revisionId)),
     ).resolves.toEqual([]);

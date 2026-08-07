@@ -62,7 +62,10 @@ export class DrizzleAcceptPreparedProposalRepository implements AcceptPreparedPr
       if (existing) {
         if (
           existing.submissionId !== request.submissionId ||
-          existing.outputFingerprint !== request.expectedOutputFingerprint
+          existing.outputFingerprint !== request.expectedOutputFingerprint ||
+          !existing.topicId ||
+          !existing.briefingId ||
+          !existing.revisionId
         ) {
           return { kind: "idempotency-conflict" };
         }

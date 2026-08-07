@@ -159,6 +159,15 @@ idempotent. It does not accept Sources or Claims, mutate an existing Topic,
 target an existing Briefing, or publish content. Later phases add the separate
 evidence and Claim decisions described above.
 
+### Phase B1 implementation boundary
+
+Phase B1 adds one separate, explicit Source decision. A trusted editor supplies
+the Source's title, publisher, type, canonical URL, retrieval date, relation,
+and rights note; the command creates an Accepted Source linked to its Source
+Submission and records an append-only `source` decision. It rejects stale
+proposal output and duplicate canonical URLs, and it cannot create a Claim,
+alter a Briefing, or publish.
+
 ## Application contracts
 
 Keep these transport-neutral commands behind the private application API. The
