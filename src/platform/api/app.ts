@@ -33,6 +33,7 @@ import { registerCandidateClaimAcceptanceRoute, type CandidateClaimAcceptanceCom
 import { registerCandidateClaimAcceptanceContextRoute } from "./candidate-claim-context-route";
 import { registerHumanRevisionRoute, type HumanRevisionRouteDependencies } from "./human-revision-route";
 import { registerEditorialDraftRoute, type EditorialDraftRouteDependencies } from "./editorial-draft-route";
+import { registerEditorialSourceRoute } from "./editorial-source-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -44,6 +45,7 @@ export type PrivateApiDependencies = Readonly<{
   candidateClaimAcceptanceContexts?: CandidateClaimAcceptanceContextQuery;
   humanRevisions?: HumanRevisionRouteDependencies["humanRevisions"];
   editorialDrafts?: EditorialDraftRouteDependencies["editorialDrafts"];
+  editorialSources?: { accept(input: import("@/modules/evidence/accept-editorial-source-command").AcceptEditorialSourceRequest): Promise<unknown> };
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -206,6 +208,7 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
     });
   }
   if (dependencies.editorialDrafts) registerEditorialDraftRoute(app, { editorialDrafts: dependencies.editorialDrafts, now, invalid: (message) => new ApiError(400, "invalid_request", message), conflict: () => new ApiError(409, "conflict", "The Draft conflicts with existing editorial work."), rejected: () => new ApiError(422, "validation_failed", "The Draft cannot be created.") });
+  if (dependencies.editorialSources) registerEditorialSourceRoute(app, { sources: dependencies.editorialSources, now, invalid: (message) => new ApiError(400, "invalid_request", message), conflict: () => new ApiError(409, "conflict", "The Source conflicts with existing evidence."), rejected: () => new ApiError(422, "validation_failed", "The Source cannot be accepted.") });
 
   if (dependencies.editorialReadModels) {
     registerEditorialReadRoutes(app, {
