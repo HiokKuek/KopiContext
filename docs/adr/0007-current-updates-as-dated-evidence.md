@@ -30,8 +30,9 @@ and publication timestamps.
   review date or appear inside its five-minute explanation.
 - Initial scope is concise explanatory context around a published Topic, not
   a breaking-news feed, live political coverage, or a replacement for official
-  alerts. A scheduler may create review proposals from freshness signals later;
-  it does not publish updates autonomously.
+  alerts. A scheduled agent job may run daily or weekly to create review
+  proposals from freshness signals; it does not accept evidence, change status,
+  or publish updates autonomously.
 
 ## Consequences
 
