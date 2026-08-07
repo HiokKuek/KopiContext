@@ -384,6 +384,15 @@ export const acceptedSources = pgTable(
   (table) => [index("accepted_sources_publisher_idx").on(table.publisher)],
 );
 
+/** Append-only receipts for Sources the editor accepts without agent preparation. */
+export const editorialSourceAcceptanceRecords = pgTable(
+  "editorial_source_acceptance_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(), idempotencyKey: text("idempotency_key").notNull().unique(), acceptedSourceId: uuid("accepted_source_id").notNull().references(() => acceptedSources.id, { onDelete: "restrict", onUpdate: "cascade" }), actorId: text("actor_id").notNull(), occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(), createdAt,
+  },
+  (table) => [index("editorial_source_acceptance_records_source_occurred_idx").on(table.acceptedSourceId, table.occurredAt), check("editorial_source_acceptance_records_actor_not_empty", sql`length(${table.actorId}) > 0`)],
+);
+
 /** A factual statement in one specific Briefing revision. */
 export const claims = pgTable(
   "claims",
