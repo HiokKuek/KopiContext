@@ -48,6 +48,13 @@ describe("create human revision command", () => {
     await expect(createHumanRevisionCommand(store).create({ ...request(), content: { ...content, fiveMinuteExplanation: "" } })).resolves.toMatchObject({ ok: true });
   });
 
+  it("preserves a structurally valid source-backed orientation visual", async () => {
+    const store = repository();
+    const visualExplainers = [{ kind: "contextual-callout" as const, id: "key-context", title: "Key context", body: "A short explanation.", sourceIds: ["source-1"] }];
+    await expect(createHumanRevisionCommand(store).create({ ...request(), content: { ...content, visualExplainers } })).resolves.toMatchObject({ ok: true });
+    expect(store.createHumanRevision).toHaveBeenCalledWith(expect.objectContaining({ content: { ...content, visualExplainers } }));
+  });
+
   it("returns the original result for a durable command replay", async () => {
     const store = repository({ createHumanRevision: async () => ({ kind: "idempotent", revisionId: "revision-2", sequence: 2, creationRecordId: "creation-1" }) });
     await expect(createHumanRevisionCommand(store).create(request())).resolves.toMatchObject({ ok: true, kind: "idempotent", revisionId: "revision-2" });

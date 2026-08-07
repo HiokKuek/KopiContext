@@ -3,6 +3,8 @@
  * a complete immutable snapshot; this command never mutates an older snapshot
  * and intentionally has no Source Submission or AI-provenance inputs.
  */
+import type { BriefingVisualExplainer } from "@/modules/content/published-briefings";
+
 export type TemplateV1RevisionContent = Readonly<{
   oneSentenceExplanation: string;
   thirtySecondOverview: string;
@@ -14,6 +16,8 @@ export type TemplateV1RevisionContent = Readonly<{
   singaporeSeaAngle: string;
   questionsToAsk: ReadonlyArray<string>;
   mistakesToAvoid: ReadonlyArray<string>;
+  /** Optional source-backed orientation components; absence is valid for topics that do not need them. */
+  visualExplainers?: ReadonlyArray<BriefingVisualExplainer>;
 }>;
 
 export type CurrentBriefingForHumanRevision = Readonly<{
@@ -94,10 +98,26 @@ export function isTemplateV1RevisionContent(value: unknown): value is TemplateV1
     && stringArray(value.questionsToAsk)
     && stringArray(value.mistakesToAvoid)
     && Array.isArray(value.keyTerms)
-    && value.keyTerms.every((term) => record(term) && typeof term.term === "string" && typeof term.definition === "string");
+    && value.keyTerms.every((term) => record(term) && typeof term.term === "string" && typeof term.definition === "string")
+    && (value.visualExplainers === undefined || isVisualExplainers(value.visualExplainers));
 }
 
 function hasText(value: string): boolean { return value.trim().length > 0; }
 function record(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }
 function strings(value: Record<string, unknown>, keys: ReadonlyArray<string>): boolean { return keys.every((key) => typeof value[key] === "string"); }
 function stringArray(value: unknown): value is ReadonlyArray<string> { return Array.isArray(value) && value.every((item) => typeof item === "string"); }
+
+/** Validates the generic shape common to every reader visual before preserving it in an immutable revision. */
+function isVisualExplainers(value: unknown): value is ReadonlyArray<BriefingVisualExplainer> {
+  return Array.isArray(value) && value.every((explainer) => {
+    if (!record(explainer) || !string(explainer.kind) || !string(explainer.id) || !string(explainer.title) || !stringArray(explainer.sourceIds)) return false;
+    switch (explainer.kind) {
+      case "concept-map": return string(explainer.introduction) && string(explainer.centralLabel) && Array.isArray(explainer.nodes) && explainer.nodes.every((node) => record(node) && string(node.id) && string(node.label) && string(node.summary) && stringArray(node.details) && stringArray(node.sourceIds));
+      case "comparison": return record(explainer.columns) && string(explainer.columns.label) && string(explainer.columns.valueLabel) && Array.isArray(explainer.rows) && explainer.rows.every((row) => record(row) && string(row.label) && string(row.value) && stringArray(row.sourceIds));
+      case "process-flow": return string(explainer.introduction) && Array.isArray(explainer.steps) && explainer.steps.every((step) => record(step) && string(step.title) && string(step.explanation) && stringArray(step.sourceIds));
+      case "contextual-callout": return string(explainer.body);
+      default: return false;
+    }
+  });
+}
+function string(value: unknown): value is string { return typeof value === "string"; }

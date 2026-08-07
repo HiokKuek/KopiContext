@@ -71,6 +71,13 @@ describe("mapPublishedBriefing", () => {
       }),
     ).toBeUndefined();
   });
+
+  it("retains an optional orientation visual in the public revision contract", () => {
+    const visualExplainers = [{ kind: "contextual-callout" as const, id: "orientation", title: "The map", body: "Start here.", sourceIds: ["source-1"] }];
+    expect(mapPublishedBriefing({
+      slug: "government", title: "Government", templateVersion: "v1", content: { ...templateContent, visualExplainers }, publishedAt: new Date("2026-08-07T15:30:00.000Z"), sources: [],
+    })).toMatchObject({ visualExplainers });
+  });
 });
 
 describe("editorialTransitionPersistenceRequest", () => {

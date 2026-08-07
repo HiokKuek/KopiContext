@@ -471,6 +471,13 @@ function asBriefingTemplateContent(value: unknown): BriefingTemplateContent | un
     return undefined;
   }
 
+  // Visual explainers are optional template content. Their structural shape is
+  // validated when a human revision is created; preserve the immutable JSON
+  // snapshot for the reader rather than silently dropping its orientation map.
+  if (value.visualExplainers !== undefined && !Array.isArray(value.visualExplainers)) {
+    return undefined;
+  }
+
   return {
     oneSentenceExplanation,
     thirtySecondOverview,
@@ -482,6 +489,7 @@ function asBriefingTemplateContent(value: unknown): BriefingTemplateContent | un
     singaporeSeaAngle,
     questionsToAsk: value.questionsToAsk,
     mistakesToAvoid: value.mistakesToAvoid,
+    ...(value.visualExplainers === undefined ? {} : { visualExplainers: value.visualExplainers as BriefingTemplateContent["visualExplainers"] }),
   };
 }
 
