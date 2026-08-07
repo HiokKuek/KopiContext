@@ -5,17 +5,52 @@ on Vercel. It is the HTTP adapter for application use cases: Vercel calls it
 only from server-side code through the authenticated tunnel or reverse proxy;
 browsers never receive its credential or database access.
 
-The baseline exposes `GET /v1/healthz` and can compose feature command ports.
-It proves the versioning, authentication, lifecycle, and contract-testing
-boundary before production persistence and workers are connected.
+The API exposes `GET /v1/healthz`, an anonymous published-Briefing query, and
+private feature command ports. It is the composition root for runtime adapters:
+production uses the real Postgres catalogue and Editorial Workflow adapters;
+the local reader fixture is available only through a separately selected local
+development mode.
 
 ## Start locally
 
-Choose a non-empty credential and run:
+`PRIVATE_API_SERVICE_CREDENTIAL` is always required. The runtime defaults to
+`production`, which requires `DATABASE_URL` and composes:
+
+- `DrizzlePublishedCatalogueRepository` for public Published Briefings;
+- `DrizzleEditorialRepository` and the Editorial Workflow command for
+  authenticated editorial transitions; and
+- a Postgres pool that is closed alongside Fastify during shutdown.
+
+Run that production-shaped composition only with an isolated local, staging,
+or production database that has already received the checked-in migrations:
 
 ```sh
-PRIVATE_API_SERVICE_CREDENTIAL='local-development-secret' pnpm api:start
+DATABASE_URL='postgres://API_ROLE:PASSWORD@HOST:5432/DATABASE' \
+PRIVATE_API_SERVICE_CREDENTIAL='private-service-secret' \
+pnpm api:start
 ```
+
+There is no fixture fallback when `DATABASE_URL` is absent. This protects a
+deployment from accidentally exposing manually checked-in reader content or a
+non-durable Editorial Workflow.
+
+For interface work without a database, select the restricted fixture mode
+explicitly:
+
+```sh
+PRIVATE_API_RUNTIME_MODE='local-development' \
+PRIVATE_API_SERVICE_CREDENTIAL='local-development-secret' \
+pnpm api:start
+```
+
+Local-development mode rejects `DATABASE_URL`, serves the checked-in published
+Briefing fixture for reader/API work, and intentionally does **not** compose an
+editorial repository, Source Submission preparation, or analytics delivery.
+It therefore cannot be mistaken for a persistent editorial environment. To
+exercise source preparation locally, call
+`createLocalSourcePreparationCommand` from an explicit development/test
+composition with registered transcript fixtures; do not add it as a silent
+`api:start` default.
 
 The service binds to `127.0.0.1:3001` by default. `PRIVATE_API_HOST` and
 `PRIVATE_API_PORT` can override those values. In a deployed environment, the
@@ -25,7 +60,7 @@ Call the health endpoint with the same credential:
 
 ```sh
 curl \
-  -H 'Authorization: Bearer local-development-secret' \
+  -H 'Authorization: Bearer private-service-secret' \
   http://127.0.0.1:3001/v1/healthz
 ```
 
@@ -88,7 +123,10 @@ or an external AI provider.
 
 This adapter is not automatically composed by `api:start`, and must never be
 used as production provider wiring. The production private runtime still needs
-reviewed retrieval, provider, persistence, queue, and operational adapters.
+reviewed retrieval, provider, Source Submission persistence, queue, and
+operational adapters. Until those are deliberately composed, the private
+source-submission endpoint is absent rather than accepting a non-durable or
+placeholder workflow.
 
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.
@@ -119,9 +157,11 @@ rate-limit state must be transient and must not be written to the analytics
 store or event payload.
 
 This route is not composed by `pnpm api:start` yet because the production
-analytics persistence/delivery adapter is still pending. Tests compose an
-in-memory command port and prove that invalid payloads, including raw IP data,
-cannot reach it.
+analytics persistence/delivery adapter is still pending. The local-development
+runtime also leaves it absent: collecting local events without an explicit,
+inspectable development adapter would give a misleading impression of durable
+analytics. Tests compose an in-memory command port and prove that invalid
+payloads, including raw IP data, cannot reach it.
 
 ## Vercel web client
 
