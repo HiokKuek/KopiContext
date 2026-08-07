@@ -1,0 +1,5 @@
+-- KopiContext persistence baseline.
+--
+-- Domain tables are intentionally absent. The Drizzle migrator's own ledger
+-- records this baseline before later, reviewed module-owned migrations run.
+--> statement-breakpoint

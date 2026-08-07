@@ -12,6 +12,7 @@ KopiContext helps English-speaking Singaporeans gain enough accurate, source-bac
 - [Team charters](docs/teams/)
 - [Implementation roadmap](docs/architecture/implementation-roadmap.md)
 - [Design and voice standard](docs/design/briefing-experience.md)
+- [Postgres persistence baseline](docs/runtime/persistence.md)
 
 The first vertical slice is the civic Briefing, **How Singapore's Government Works**. It proves source submission, agent preparation, Editorial Approval, public reading, search, and anonymous analytics before the product expands its Topic catalogue.
 
