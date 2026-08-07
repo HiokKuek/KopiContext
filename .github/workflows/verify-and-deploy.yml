@@ -1,0 +1,44 @@
+name: Verify and deploy
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kopicontext-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm db:check
+      - run: pnpm build
+
+  deploy_private_runtime:
+    name: Deploy private runtime
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: [self-hosted, linux, x64, kopi-private-deploy]
+    environment: home-production
+    concurrency:
+      group: kopicontext-home-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/deploy-private-runtime.sh

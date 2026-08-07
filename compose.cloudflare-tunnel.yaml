@@ -1,0 +1,17 @@
+# The only component permitted to join the public-facing tunnel and the
+# private API network. It deliberately does not publish a host port.
+name: kopicontext-tunnel
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: "${TUNNEL_TOKEN:?set in /etc/kopicontext/cloudflared.env}"
+    networks: [private_api]
+
+networks:
+  private_api:
+    external: true
+    name: "${KOPI_PRIVATE_API_NETWORK:?set in /etc/kopicontext/cloudflared.env}"

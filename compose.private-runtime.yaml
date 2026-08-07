@@ -10,7 +10,15 @@ services:
       POSTGRES_DB: "${POSTGRES_DB:?set in private env file}"
       POSTGRES_USER: "${POSTGRES_USER:?set in private env file}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set in private env file}"
-    volumes: ["postgres-data:/var/lib/postgresql/data"]
+      POSTGRES_MIGRATION_USER: "${POSTGRES_MIGRATION_USER:?set in private env file}"
+      POSTGRES_MIGRATION_PASSWORD: "${POSTGRES_MIGRATION_PASSWORD:?set in private env file}"
+      POSTGRES_API_USER: "${POSTGRES_API_USER:?set in private env file}"
+      POSTGRES_API_PASSWORD: "${POSTGRES_API_PASSWORD:?set in private env file}"
+    # Runs only when the named data volume is first initialised. It creates
+    # separate DDL and DML roles before migrations begin.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./deploy/postgres/init-roles.sh:/docker-entrypoint-initdb.d/10-init-roles.sh:ro
     networks: [private_data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
@@ -65,8 +73,10 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: "${DATABASE_URL:?set in private env file}"
-      SOURCE_PREPARATION_WORKER_ID: "${SOURCE_PREPARATION_WORKER_ID:?set in private env file}"
-      SOURCE_PREPARATION_ADAPTER_MODULE: "${SOURCE_PREPARATION_ADAPTER_MODULE:?set in private env file}"
+      # Profiles are interpolated even when disabled, so validation happens in
+      # the worker runtime when an operator explicitly enables this profile.
+      SOURCE_PREPARATION_WORKER_ID: "${SOURCE_PREPARATION_WORKER_ID:-}"
+      SOURCE_PREPARATION_ADAPTER_MODULE: "${SOURCE_PREPARATION_ADAPTER_MODULE:-}"
       SOURCE_PREPARATION_WORKER_POLL_INTERVAL_MS: "${SOURCE_PREPARATION_WORKER_POLL_INTERVAL_MS:-1000}"
       SOURCE_PREPARATION_WORKER_LEASE_MS: "${SOURCE_PREPARATION_WORKER_LEASE_MS:-60000}"
       SOURCE_PREPARATION_WORKER_MAX_ATTEMPTS: "${SOURCE_PREPARATION_WORKER_MAX_ATTEMPTS:-3}"

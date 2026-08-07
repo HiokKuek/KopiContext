@@ -19,6 +19,10 @@ HTTP route and never part of the Vercel deployment.
   network.
 - `deploy/private-runtime.env.example` documents names only. Put a populated
   file outside Git and never paste secrets into chat, issues, or source.
+- `compose.cloudflare-tunnel.yaml` runs a separate Cloudflare connector on
+  `private_api`; its token belongs in `/etc/kopicontext/cloudflared.env`, never
+  in the repository. See the [OMV deployment guide](omv-github-deployment.md)
+  for the deliberate host setup and GitHub deployment path.
 
 The Docker base uses `node:22-alpine` for developer convenience. Before a
 production rollout, resolve it to a reviewed immutable image digest and record
@@ -34,6 +38,11 @@ Engine and the Compose plugin. Create separate Postgres roles before traffic:
 - `DATABASE_URL`: DML-only API role, unable to create/drop schema or own it.
 - `TEST_DATABASE_URL`: separate clearly named test database/role; never use
   production credentials for integration tests.
+
+For a new Compose volume, the checked-in Postgres initialisation script creates
+the documented DDL and DML roles from the four `POSTGRES_*` role values. It
+runs only once, before the migration job. It is not a credential-rotation
+mechanism.
 
 Generate a high-entropy `PRIVATE_API_SERVICE_CREDENTIAL`. It is shared only by
 Fastify and Vercel server-side code, not the browser or editor session. Never

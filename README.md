@@ -130,6 +130,7 @@ back to `DATABASE_URL`; see the [persistence runbook](docs/runtime/persistence.m
 | Editorial states and approval rules | [Editorial workflow PRD](docs/prd/0003-editorial-workflow.md) |
 | How source material becomes a reviewable proposal | [Source-processing PRD](docs/prd/0004-source-submission-and-agent-processing.md) |
 | Private API, persistence, authentication, and deployment | [Runtime documentation](docs/runtime/) |
+| Set up OMV, the private Cloudflare connector, and guarded GitHub deployment | [OMV deployment guide](docs/runtime/omv-github-deployment.md) |
 | Domain language | [CONTEXT.md](CONTEXT.md) |
 | Agent workflow, team ownership, and project conventions | [AGENTS.md](AGENTS.md), [team charters](docs/teams/), and [development workflow](docs/agents/development-workflow.md) |
 
