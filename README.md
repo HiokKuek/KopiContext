@@ -48,7 +48,8 @@ taxonomy, or publish. A human editor is always the approval gate.
   can inspect provenance and proposed placement, Claims, and draft as clearly
   unaccepted suggestions.
 - A direct editorial starting point: the editor can create a Draft Briefing
-  and accept a rights-cleared Source without waiting for agent preparation.
+  and accept a rights-cleared Source without waiting for agent preparation,
+  then record a supported Claim with its excerpt and rationale.
 
 ## Architecture at a glance
 

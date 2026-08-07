@@ -24,6 +24,10 @@ existing agent-prepared proposal path.
 - An editor may create a Draft Topic and a human-origin Briefing revision.
 - An editor-authored Claim is bound to the current human revision and has one
   or more direct or contextual Supports to Accepted Sources.
+- The editor enters a Claim only after accepting its Source and must record a
+  checkable statement, the exact supporting excerpt, and a short rationale.
+  The command is idempotent, writes an append-only receipt, and rejects a
+  stale, non-Draft, or non-current revision.
 - The same publication invariant applies to every Claim: it must have accepted
   Source support before a Briefing can be Published.
 - Agent-generated Candidate Claims retain their proposal fingerprint and
