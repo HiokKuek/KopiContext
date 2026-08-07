@@ -24,6 +24,8 @@ The design lead owns:
   specified;
 - accessibility design requirements, including keyboard, focus, contrast,
   semantic structure, touch targets, and reduced motion;
+- the product-wide voice-and-content style standard for reader-facing UI and
+  Editorial Briefings;
 - visual and interaction review of changes that affect a reader or editor.
 
 Engineering owns implementation details and automated accessibility checks.
@@ -49,6 +51,9 @@ Neither agents nor the design team can grant Editorial Approval.
    gradients, or motion do not substitute for useful structure.
 6. Use real or representative long-form content in review. Placeholder copy
    cannot prove readable line lengths, hierarchy, wrapping, or source density.
+7. Apply the voice-and-content style standard to every reader-facing string,
+   including UI states and Editorial Briefings. Friendly, plain, concise
+   language helps a reader understand without being talked down to.
 
 ## Review gates
 
@@ -59,6 +64,8 @@ Neither agents nor the design team can grant Editorial Approval.
 - The proposal names the components and tokens it uses, its narrow and wide
   layout behaviour, empty/loading/error states where relevant, and the
   accessible name and keyboard behaviour of each new control.
+- The proposal supplies reader-facing copy for new controls and states, and
+  identifies unfamiliar terms that need a brief in-place explanation.
 - A design lead review is required for new visual tokens, type roles,
   navigation patterns, major responsive composition changes, or changes to the
   conversation path.
@@ -75,6 +82,9 @@ Neither agents nor the design team can grant Editorial Approval.
   removing information or control.
 - Briefing, Current Update, Sources, and freshness information remain
   distinguishable in both layout modes.
+- Reader-facing copy follows the voice-and-content style standard: it is plain
+  enough to understand quickly, specific enough to be useful, and free of
+  unexplained jargon, hype, or patronising simplification.
 - The visual reviewer checks a rendered screen with representative content;
   automated tests cover reader-visible behaviour and accessibility semantics.
 

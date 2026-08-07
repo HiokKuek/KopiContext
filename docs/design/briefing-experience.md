@@ -16,6 +16,37 @@ The page is a guided briefing, not an official portal, newspaper front page,
 or encyclopedia. It uses SGDS interaction and accessibility conventions as a
 baseline, while retaining KopiContext's independent identity.
 
+## Voice and content style
+
+KopiContext speaks like a well-prepared friend: friendly, plain, and concise.
+It respects the reader's intelligence while making it easy to get oriented.
+This applies equally to navigation, buttons, forms, loading and error states,
+Source/support disclosures, Current Updates, and every published Briefing.
+
+- Prefer familiar words, active voice, and short sentences. Say what a reader
+  can do and what will happen next: “View sources”, not “Citation metadata”.
+- Explain an unfamiliar term where it first matters, in a short definition or
+  linked key term. Do not make a reader leave the main idea to understand the
+  vocabulary used to explain it.
+- Be specific about uncertainty, freshness, and failure. “Reviewed 7 August
+  2026” and “Sources are unavailable right now. Try again.” are clearer than
+  vague assurances or apologies.
+- Avoid jargon, insider shorthand, hype, and promotional superlatives. Do not
+  call a Briefing “essential”, “revolutionary”, or “effortless”; demonstrate
+  value through useful context.
+- Avoid patronising simplification. Explain complexity in layers without
+  implying that the reader cannot handle it, and never replace a precise term
+  with a misleadingly simple one.
+- Name public content by the glossary: Topic, Briefing, Current Update,
+  Source, Claim, and Editorial Approval. If an audience-facing label needs a
+  plainer phrasing, retain the underlying meaning and explain it once.
+
+Editorial Briefings use the same standard. They state what is known, separate
+durable explanation from Current Updates, attribute Claims to Sources, and
+describe reasonable disagreement without theatrical balance or false
+certainty. A UI state and a Briefing section each have one job: orient, explain,
+or direct the reader—never merely decorate the page.
+
 ## Design thesis
 
 The page begins with a position in a conversation: a plain-language answer to
