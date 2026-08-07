@@ -1,5 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
+import type { PublishedBriefing } from "@/modules/content/published-briefings";
+
 import {
   type PrivateServiceIdentity,
   type ServiceCredentialAuthenticator,
@@ -7,7 +9,17 @@ import {
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
+  publicCatalogue: PublicCatalogueQuery;
   now?: () => Date;
+}>;
+
+/**
+ * The read-only application seam used by anonymous readers. Implementations
+ * may query a fixture today and Postgres later, but must never make the HTTP
+ * adapter aware of that choice.
+ */
+export type PublicCatalogueQuery = Readonly<{
+  findPublishedBriefingBySlug(slug: string): Promise<PublishedBriefing | undefined> | PublishedBriefing | undefined;
 }>;
 
 type ApiErrorBody = Readonly<{
@@ -44,7 +56,7 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
   const now = dependencies.now ?? (() => new Date());
 
   app.addHook("onRequest", async (request) => {
-    if (!request.url.startsWith("/v1/")) {
+    if (!request.url.startsWith("/v1/") || request.url.startsWith("/v1/public/")) {
       return;
     }
 
@@ -65,6 +77,22 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
     version: "v1",
     checkedAt: now().toISOString(),
   }));
+
+  app.get<{ Params: { slug: string } }>("/v1/public/briefings/:slug", async (request, reply) => {
+    const briefing = await dependencies.publicCatalogue.findPublishedBriefingBySlug(
+      request.params.slug,
+    );
+
+    // This check keeps a mistaken repository implementation from exposing a
+    // draft through the public transport boundary.
+    if (!briefing || briefing.status !== "published") {
+      return reply
+        .code(404)
+        .send(errorBody("not_found", "The requested Briefing does not exist."));
+    }
+
+    return briefing;
+  });
 
   app.setNotFoundHandler((_request, reply) => {
     return reply.code(404).send(errorBody("not_found", "The requested endpoint does not exist."));

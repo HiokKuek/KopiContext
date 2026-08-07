@@ -1,10 +1,14 @@
 import { buildPrivateApi } from "./app";
 import { privateApiConfigFromEnvironment } from "./config";
 import { serviceCredentialAuthenticator } from "./service-auth";
+import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
 
 const configuration = privateApiConfigFromEnvironment();
 const app = buildPrivateApi({
   serviceAuthenticator: serviceCredentialAuthenticator(configuration.serviceCredential),
+  publicCatalogue: {
+    findPublishedBriefingBySlug: getPublishedBriefingBySlug,
+  },
 });
 
 const shutdown = async () => {
