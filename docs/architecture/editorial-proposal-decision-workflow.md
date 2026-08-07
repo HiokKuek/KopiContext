@@ -150,6 +150,15 @@ multi-submission synthesis, editor-authored rich editing, and revising a
 currently published Briefing. It exercises all trust boundaries without
 pretending that a proposal is editorial truth.
 
+### Phase A implementation boundary
+
+Phase A implements the narrow creation path for a prepared Source Submission:
+the trusted editor accepts its classification and draft into a **new** Draft
+Topic, Briefing, and agent-origin revision. The decision is append-only and
+idempotent. It does not accept Sources or Claims, mutate an existing Topic,
+target an existing Briefing, or publish content. Later phases add the separate
+evidence and Claim decisions described above.
+
 ## Application contracts
 
 Keep these transport-neutral commands behind the private application API. The

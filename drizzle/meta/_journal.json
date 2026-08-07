@@ -43,6 +43,13 @@
       "when": 1786075914965,
       "tag": "0005_anonymous-analytics-events",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1786076282943,
+      "tag": "0006_proposal-decision-acceptance",
+      "breakpoints": true
     }
   ]
 }

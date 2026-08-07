@@ -50,6 +50,8 @@ export const sourcePreparationResultState = pgEnum("source_preparation_result_st
 export const briefingRevisionOrigin = pgEnum("briefing_revision_origin", ["human", "agent"]);
 export const claimStatus = pgEnum("claim_status", ["candidate", "verified", "rejected"]);
 export const claimSupportKind = pgEnum("claim_support_kind", ["direct", "contextual"]);
+export const proposalDecisionPart = pgEnum("proposal_decision_part", ["classification-and-draft"]);
+export const proposalDecisionOutcome = pgEnum("proposal_decision_outcome", ["accepted"]);
 export const anonymousAnalyticsEventType = pgEnum("anonymous_analytics_event_type", [
   "page-view",
   "search",
@@ -404,6 +406,44 @@ export const editorialAuditRecords = pgTable(
   ],
 );
 
+/**
+ * Append-only decisions on agent-prepared material. This is distinct from a
+ * Briefing workflow audit: it records the trusted editor's acceptance of a
+ * particular proposal output before the resulting Draft can enter review.
+ */
+export const proposalDecisionRecords = pgTable(
+  "proposal_decision_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    sourceSubmissionId: uuid("source_submission_id")
+      .notNull()
+      .references(() => sourceSubmissions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    proposalOutputFingerprint: text("proposal_output_fingerprint").notNull(),
+    proposalPart: proposalDecisionPart("proposal_part").notNull(),
+    outcome: proposalDecisionOutcome("outcome").notNull(),
+    actorId: text("actor_id").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    reasonOrNote: text("reason_or_note"),
+    topicId: uuid("topic_id")
+      .notNull()
+      .references(() => topics.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingId: uuid("briefing_id")
+      .notNull()
+      .references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingRevisionId: uuid("briefing_revision_id")
+      .notNull()
+      .references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    metadata: jsonb("metadata").default({}).notNull(),
+  },
+  (table) => [
+    index("proposal_decision_records_submission_occurred_idx").on(table.sourceSubmissionId, table.occurredAt),
+    check("proposal_decision_records_actor_not_empty", sql`length(${table.actorId}) > 0`),
+  ],
+);
+
 export type TopicRow = typeof topics.$inferSelect;
 export type NewTopicRow = typeof topics.$inferInsert;
 export type TopicRequestDemandRow = typeof topicRequestDemands.$inferSelect;
@@ -424,3 +464,5 @@ export type ClaimSupportRow = typeof claimSupports.$inferSelect;
 export type NewClaimSupportRow = typeof claimSupports.$inferInsert;
 export type EditorialAuditRecordRow = typeof editorialAuditRecords.$inferSelect;
 export type NewEditorialAuditRecordRow = typeof editorialAuditRecords.$inferInsert;
+export type ProposalDecisionRecordRow = typeof proposalDecisionRecords.$inferSelect;
+export type NewProposalDecisionRecordRow = typeof proposalDecisionRecords.$inferInsert;
