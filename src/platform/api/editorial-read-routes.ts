@@ -117,6 +117,15 @@ function serializeEditorialBriefing(briefing: EditorialBriefingReview): Editoria
           }
         : {}),
     })),
+    currentUpdates: (briefing.currentUpdates ?? []).map((update) => ({
+      id: update.id,
+      title: update.title,
+      body: update.body,
+      effectiveAt: update.effectiveAt,
+      status: update.status,
+      supports: update.supports.map((support) => ({ ...support })),
+      allowedActions: [...update.allowedActions],
+    })),
     freshness: { ...briefing.freshness },
     auditRecords: briefing.auditRecords.map((record) => ({ ...record })),
     allowedActions: [...briefing.allowedActions],

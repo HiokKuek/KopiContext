@@ -7,6 +7,7 @@ import {
   freshnessFrom,
   type EditorialBriefingReview,
   type EditorialClaim,
+  type EditorialCurrentUpdate,
   type EditorialEvidenceSource,
   type EditorialReadRepository,
   type EditorialSourceSubmissionProvenance,
@@ -21,6 +22,8 @@ import {
   briefings,
   claimSupports,
   claims,
+  currentUpdateSupports,
+  currentUpdates,
   editorialAuditRecords,
   sourceSubmissions,
   topics,
@@ -106,9 +109,10 @@ export class DrizzleEditorialReadRepository implements EditorialReadRepository {
     const revision = await this.latestRevision(briefing.id);
     if (!revision || !isRecord(revision.content)) return undefined;
 
-    const [claimRows, auditRecords] = await Promise.all([
+    const [claimRows, auditRecords, updateRows] = await Promise.all([
       this.claimRowsFor(revision.id),
       this.auditRecordsFor(briefing.id),
+      this.currentUpdateRowsFor(briefing.id),
     ]);
     const { claims: reviewClaims, sources } = mapReviewEvidence(claimRows);
     const lastActivityAt = latestActivity(revision.createdAt, auditRecords);
@@ -141,6 +145,7 @@ export class DrizzleEditorialReadRepository implements EditorialReadRepository {
       templateSections,
       claims: reviewClaims,
       acceptedSources: sources,
+      currentUpdates: mapCurrentUpdates(updateRows),
       freshness: freshnessFrom(lastActivityAt, this.now(), this.staleAfterDays),
       auditRecords,
       allowedActions: allowedEditorialWorkflowActions(item),
@@ -257,6 +262,29 @@ export class DrizzleEditorialReadRepository implements EditorialReadRepository {
       .where(eq(claims.briefingRevisionId, revisionId))
       .orderBy(asc(claims.createdAt), asc(claimSupports.addedAt));
   }
+
+  private async currentUpdateRowsFor(briefingId: string): Promise<ReadonlyArray<CurrentUpdateRow>> {
+    return this.db
+      .select({
+        updateId: currentUpdates.id,
+        title: currentUpdates.title,
+        body: currentUpdates.body,
+        effectiveAt: currentUpdates.effectiveAt,
+        status: currentUpdates.status,
+        supportId: currentUpdateSupports.id,
+        sourceId: acceptedSources.id,
+        sourceTitle: acceptedSources.title,
+        sourcePublisher: acceptedSources.publisher,
+        canonicalUrl: acceptedSources.canonicalUrl,
+        excerpt: currentUpdateSupports.excerpt,
+        rationale: currentUpdateSupports.rationale,
+      })
+      .from(currentUpdates)
+      .leftJoin(currentUpdateSupports, eq(currentUpdateSupports.currentUpdateId, currentUpdates.id))
+      .leftJoin(acceptedSources, eq(acceptedSources.id, currentUpdateSupports.acceptedSourceId))
+      .where(eq(currentUpdates.briefingId, briefingId))
+      .orderBy(desc(currentUpdates.effectiveAt), asc(currentUpdateSupports.addedAt));
+  }
 }
 
 type ClaimEvidenceRow = Readonly<{
@@ -296,6 +324,53 @@ type ClaimEvidenceRow = Readonly<{
   classificationConfidence: string | null;
   classificationRationale: string | null;
 }>;
+
+type CurrentUpdateRow = Readonly<{
+  updateId: string;
+  title: string;
+  body: string;
+  effectiveAt: Date;
+  status: EditorialStatus;
+  supportId: string | null;
+  sourceId: string | null;
+  sourceTitle: string | null;
+  sourcePublisher: string | null;
+  canonicalUrl: string | null;
+  excerpt: string | null;
+  rationale: string | null;
+}>;
+
+function mapCurrentUpdates(rows: ReadonlyArray<CurrentUpdateRow>): ReadonlyArray<EditorialCurrentUpdate> {
+  type MutableUpdate = Omit<EditorialCurrentUpdate, "supports" | "allowedActions"> & {
+    supports: Array<EditorialCurrentUpdate["supports"][number]>;
+  };
+  const byId = new Map<string, MutableUpdate>();
+  for (const row of rows) {
+    const update = byId.get(row.updateId) ?? {
+      id: row.updateId,
+      title: row.title,
+      body: row.body,
+      effectiveAt: row.effectiveAt.toISOString(),
+      status: row.status,
+      supports: [],
+    };
+    if (row.supportId && row.sourceId && row.sourceTitle && row.sourcePublisher && row.canonicalUrl && row.excerpt && row.rationale) {
+      update.supports.push({ id: row.supportId, sourceId: row.sourceId, title: row.sourceTitle, publisher: row.sourcePublisher, canonicalUrl: row.canonicalUrl, excerpt: row.excerpt, rationale: row.rationale });
+    }
+    byId.set(row.updateId, update);
+  }
+  return [...byId.values()].map((update) => ({
+    ...update,
+    allowedActions: allowedEditorialWorkflowActions({
+      id: update.id,
+      status: update.status,
+      revisionId: update.id,
+      template: { isComplete: true },
+      acceptedSources: update.supports.map((support) => ({ id: support.sourceId })),
+      claims: update.supports.length > 0 ? [{ id: update.id, isSupported: true }] : [],
+    }),
+  }));
+}
 
 /** Pure mapper lets unit tests prove the editor data-minimisation boundary. */
 export function mapReviewEvidence(rows: ReadonlyArray<ClaimEvidenceRow>): Readonly<{
