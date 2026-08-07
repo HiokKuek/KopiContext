@@ -27,7 +27,8 @@ The guided script does the host-only portions in this order:
 1. verifies Docker and the checkout;
 2. creates the dedicated `kopi-deploy` account and its runner directory;
 3. writes database, API, and role credentials to
-   `/etc/kopicontext/private-runtime.env` (mode 600);
+   `/etc/kopicontext/private-runtime.env` (mode 640, readable only by the
+   root user and the dedicated `kopi-deploy` runner group);
 4. starts Postgres, migration, and API containers;
 5. collects the separate Cloudflare tunnel token into
    `/etc/kopicontext/cloudflared.env` (mode 600), runs its connector, and
