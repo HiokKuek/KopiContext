@@ -11,11 +11,16 @@ import {
 import { submitEditorialTransition, type EditorialTransitionSubmission } from "@/platform/web/editorial-review-bff";
 import { createHumanRevision, type HumanRevisionSubmission } from "@/platform/web/human-revision-bff";
 import type { TemplateV1RevisionContent } from "@/modules/editorial/create-human-revision-command";
+import { acceptEditorialSource } from "@/platform/web/editorial-source-bff";
+import type { EditorialSource } from "@/modules/evidence/accept-editorial-source-command";
 
 export type EditorialTransitionActionState =
   | Readonly<{ kind: "idle"; message: "" }>
   | EditorialTransitionSubmission;
 export type HumanRevisionActionState = Readonly<{ kind: "idle"; message: "" }> | HumanRevisionSubmission;
+export type EditorialSourceActionState = Readonly<{kind:"idle"|"invalid"|"rejected"|"unavailable";message:string}>;
+export async function acceptEditorialSourceAction(briefingId:string,_:EditorialSourceActionState,form:FormData):Promise<EditorialSourceActionState>{const editor=await requireEditorForAction();if(form.get("confirm")!=="accept")return{kind:"invalid",message:"Confirm that you reviewed this Source."};const source=sourceOf(form);if(!source)return{kind:"invalid",message:"Complete all Source metadata."};const result=await acceptEditorialSource(editor,source);if(result.kind==="success"){revalidatePath(`/editor/briefings/${briefingId}`);return{kind:"idle",message:"Source accepted."}}return result;}
+function sourceOf(f:FormData):EditorialSource|undefined{const get=(n:string)=>text(f.get(n));const title=get("title"),publisher=get("publisher"),sourceType=get("sourceType"),canonicalUrl=get("canonicalUrl"),retrievedAt=get("retrievedAt"),relation=get("relation"),rightsNote=get("rightsNote");return title&&publisher&&sourceType&&canonicalUrl&&retrievedAt&&relation&&rightsNote?{title,publisher,sourceType,canonicalUrl,retrievedAt:new Date(retrievedAt).toISOString(),relation,rightsNote}:undefined}
 
 /**
  * Same-origin Server Action for the review decision panel. It authenticates on

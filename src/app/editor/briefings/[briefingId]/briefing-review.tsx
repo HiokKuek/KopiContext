@@ -6,6 +6,8 @@ import type { EditorialBriefingReview } from "@/modules/editorial/editorial-read
 import { EditorHeader } from "../../editor-workspace";
 import { TransitionPanel } from "./transition-panel";
 import type { EditorialTransitionActionState } from "./actions";
+import type { EditorialSourceActionState } from "./actions";
+import { EditorialSourceForm } from "./editorial-source-form";
 
 type TransitionAction = (state: EditorialTransitionActionState, formData: FormData) => Promise<EditorialTransitionActionState>;
 
@@ -13,10 +15,12 @@ export function BriefingReview({
   editor,
   review,
   transitionAction,
+  sourceAction,
 }: Readonly<{
   editor: EditorIdentity;
   review: EditorialBriefingReview;
   transitionAction: TransitionAction;
+  sourceAction: (state: EditorialSourceActionState, form: FormData) => Promise<EditorialSourceActionState>;
 }>) {
   return (
     <>
@@ -60,6 +64,7 @@ export function BriefingReview({
                 </ul>
               )}
             </section>
+            {review.briefing.status === "draft" ? <EditorialSourceForm action={sourceAction} /> : null}
             <section aria-labelledby="audit-heading">
               <p className="section-kicker">Record</p>
               <h2 id="audit-heading">Editorial record</h2>
