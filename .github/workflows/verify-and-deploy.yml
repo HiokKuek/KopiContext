@@ -18,11 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # setup-node's pnpm cache asks pnpm for its store location, so pnpm must
+      # be installed before the cache-enabled Node setup action runs.
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       - run: pnpm typecheck
