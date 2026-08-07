@@ -5,9 +5,9 @@ on Vercel. It is the HTTP adapter for application use cases: Vercel calls it
 only from server-side code through the authenticated tunnel or reverse proxy;
 browsers never receive its credential or database access.
 
-The baseline currently exposes `GET /v1/healthz`. It proves the versioning,
-authentication, lifecycle, and contract-testing boundary before feature
-endpoints are connected to the editorial and evidence modules.
+The baseline exposes `GET /v1/healthz` and can compose feature command ports.
+It proves the versioning, authentication, lifecycle, and contract-testing
+boundary before production persistence and workers are connected.
 
 ## Start locally
 
@@ -29,8 +29,9 @@ curl \
   http://127.0.0.1:3001/v1/healthz
 ```
 
-Every `/v1` endpoint requires a service credential. Errors use one stable JSON
-shape so the Vercel BFF and operational callers can handle them consistently:
+Every non-public `/v1` endpoint requires a service credential. Errors use one
+stable JSON shape so the Vercel BFF and operational callers can handle them
+consistently:
 
 ```json
 {
@@ -40,6 +41,33 @@ shape so the Vercel BFF and operational callers can handle them consistently:
   }
 }
 ```
+
+## Source-submission command
+
+When the API composition root supplies the source-submission command port,
+`POST /v1/source-submissions` accepts a private, idempotent submission for
+preparation. Its body is deliberately explicit so the original identifier,
+submitter, timestamp, and rights note become retained provenance:
+
+```json
+{
+  "idempotencyKey": "submission:government-video:v1",
+  "submission": {
+    "id": "submission-government-video",
+    "kind": "transcript",
+    "originalIdentifier": "https://example.com/video-transcript",
+    "submittedBy": "editor-ernest",
+    "submittedAt": "2026-08-07T09:30:00.000Z",
+    "rightsNote": "Submitted for editorial assessment."
+  }
+}
+```
+
+The command responds `202 Accepted` with the preparation outcome. The outcome
+is a proposal for editorial review; it does not accept a Source, alter the
+Topic taxonomy, or publish content. Unknown or incomplete fields receive a
+`400` response using the stable `invalid_request` error envelope. A caller can
+retry the same idempotency key without triggering a second preparation.
 
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.

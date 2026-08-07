@@ -10,11 +10,16 @@ import {
   registerEditorialTransitionRoute,
   type EditorialBriefingTransitionCommand,
 } from "./editorial-transition-route";
+import {
+  registerSourceSubmissionRoute,
+  type SourceSubmissionCommand,
+} from "./source-submission-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
+  sourceSubmissions?: SourceSubmissionCommand;
   now?: () => Date;
 }>;
 
@@ -54,7 +59,7 @@ const unauthorized = () => new ApiError(401, "unauthorized", "A valid service cr
 
 /**
  * The container-facing HTTP adapter. It contains authentication and transport
- * concerns only; feature modules are deliberately not imported here yet.
+ * concerns only; feature use cases cross this boundary through injected ports.
  */
 export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyInstance {
   const app = Fastify({ logger: false });
@@ -111,6 +116,10 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
           "The requested editorial transition cannot be completed.",
         ),
     });
+  }
+
+  if (dependencies.sourceSubmissions) {
+    registerSourceSubmissionRoute(app, dependencies.sourceSubmissions);
   }
 
   app.setNotFoundHandler((_request, reply) => {
