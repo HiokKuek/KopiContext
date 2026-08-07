@@ -45,6 +45,8 @@ taxonomy, or publish. A human editor is always the approval gate.
   accepted Sources, provenance, freshness, and audit history.
 - Deliberate workflow actions: Draft → Needs verification → In editorial
   review → Approved → Published → Archived.
+- Dated Current Updates stay separate from the evergreen Briefing and require
+  their own source-backed approval before they can appear to readers.
 - A protected Source Submission form. New material is queued durably; workers
   may prepare proposals, but no worker can publish automatically. The editor
   can inspect provenance and proposed placement, Claims, and draft as clearly
