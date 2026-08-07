@@ -524,6 +524,27 @@ export const currentUpdateSupportAcceptanceRecords = pgTable(
   ],
 );
 
+/** Immutable decision history for one dated Current Update. */
+export const currentUpdateAuditRecords = pgTable(
+  "current_update_audit_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    currentUpdateId: uuid("current_update_id")
+      .notNull()
+      .references(() => currentUpdates.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    fromStatus: editorialStatus("from_status").notNull(),
+    toStatus: editorialStatus("to_status").notNull(),
+    actorId: text("actor_id").notNull(),
+    reason: text("reason"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    index("current_update_audit_records_update_occurred_idx").on(table.currentUpdateId, table.occurredAt),
+    check("current_update_audit_records_actor_not_empty", sql`length(${table.actorId}) > 0`),
+  ],
+);
+
 /**
  * Append-only receipts for editor-authored Claims. A receipt is separate from
  * the Claim itself so a retried browser submission cannot duplicate evidence.

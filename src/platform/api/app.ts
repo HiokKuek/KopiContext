@@ -37,6 +37,7 @@ import { registerEditorialSourceRoute } from "./editorial-source-route";
 import { registerEditorialClaimRoute, type EditorialClaimRouteDependencies } from "./editorial-claim-route";
 import { registerCurrentUpdateRoute } from "./current-update-route";
 import { registerCurrentUpdateSupportRoute } from "./current-update-support-route";
+import { registerCurrentUpdateTransitionRoute } from "./current-update-transition-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -52,6 +53,7 @@ export type PrivateApiDependencies = Readonly<{
   editorialClaims?: EditorialClaimRouteDependencies["editorialClaims"];
   currentUpdates?: Parameters<typeof registerCurrentUpdateRoute>[1]["updates"];
   currentUpdateSupports?: Parameters<typeof registerCurrentUpdateSupportRoute>[1]["supports"];
+  currentUpdateTransitions?: Parameters<typeof registerCurrentUpdateTransitionRoute>[1]["transitions"];
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -218,6 +220,7 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
   if (dependencies.editorialClaims) registerEditorialClaimRoute(app, { editorialClaims: dependencies.editorialClaims, now, invalid: (message) => new ApiError(400, "invalid_request", message), conflict: () => new ApiError(409, "conflict", "The Draft changed or this Claim conflicts with existing editorial evidence."), notFound: () => new ApiError(404, "not_found", "The accepted Source does not exist."), rejected: () => new ApiError(422, "validation_failed", "The Claim cannot be created.") });
   if (dependencies.currentUpdates) registerCurrentUpdateRoute(app, { updates: dependencies.currentUpdates, now, invalid: (message) => new ApiError(400, "invalid_request", message), notFound: () => new ApiError(404, "not_found", "The Briefing does not exist."), conflict: () => new ApiError(409, "conflict", "This Current Update conflicts with existing editorial work."), rejected: () => new ApiError(422, "validation_failed", "The Current Update cannot be created.") });
   if (dependencies.currentUpdateSupports) registerCurrentUpdateSupportRoute(app, { supports: dependencies.currentUpdateSupports, now, invalid: (message) => new ApiError(400, "invalid_request", message), notFound: () => new ApiError(404, "not_found", "The accepted Source does not exist."), conflict: () => new ApiError(409, "conflict", "The Current Update changed or this Source is already attached."), rejected: () => new ApiError(422, "validation_failed", "The Source cannot be attached to this Current Update.") });
+  if (dependencies.currentUpdateTransitions) registerCurrentUpdateTransitionRoute(app, { transitions: dependencies.currentUpdateTransitions, now, invalid: (message) => new ApiError(400, "invalid_request", message), notFound: () => new ApiError(404, "not_found", "The Current Update does not exist."), rejected: () => new ApiError(422, "validation_failed", "The Current Update cannot make that editorial transition.") });
 
   if (dependencies.editorialReadModels) {
     registerEditorialReadRoutes(app, {

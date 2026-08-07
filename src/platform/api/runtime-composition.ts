@@ -32,6 +32,8 @@ import { createCurrentUpdateCommand } from "@/modules/editorial/create-current-u
 import { DrizzleCreateCurrentUpdateRepository } from "@/platform/persistence/create-current-update-repository";
 import { attachCurrentUpdateSupportCommand } from "@/modules/evidence/attach-current-update-support-command";
 import { DrizzleAttachCurrentUpdateSupportRepository } from "@/platform/persistence/attach-current-update-support-repository";
+import { createCurrentUpdateWorkflowCommand } from "@/modules/editorial/current-update-workflow-command";
+import { DrizzleCurrentUpdateWorkflowRepository } from "@/platform/persistence/current-update-workflow-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -103,6 +105,7 @@ export function composePrivateApiRuntime(
     editorialClaims: createEditorialClaimCommand(new DrizzleCreateEditorialClaimRepository(persistence.db)),
     currentUpdates: createCurrentUpdateCommand(new DrizzleCreateCurrentUpdateRepository(persistence.db)),
     currentUpdateSupports: attachCurrentUpdateSupportCommand(new DrizzleAttachCurrentUpdateSupportRepository(persistence.db)),
+    currentUpdateTransitions: createCurrentUpdateWorkflowCommand(new DrizzleCurrentUpdateWorkflowRepository(persistence.db)),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
