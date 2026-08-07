@@ -13,6 +13,7 @@ KopiContext helps English-speaking Singaporeans gain enough accurate, source-bac
 - [Implementation roadmap](docs/architecture/implementation-roadmap.md)
 - [Design and voice standard](docs/design/briefing-experience.md)
 - [Postgres persistence baseline](docs/runtime/persistence.md)
+- [Private application API baseline](docs/runtime/private-api.md)
 
 The first vertical slice is the civic Briefing, **How Singapore's Government Works**. It proves source submission, agent preparation, Editorial Approval, public reading, search, and anonymous analytics before the product expands its Topic catalogue.
 
@@ -26,7 +27,7 @@ The reader page separates evergreen Briefing material from Current Updates, show
 
 ## Architecture
 
-KopiContext is a TypeScript modular monolith. The public web layer runs on Vercel; the planned private runtime owns the application API, Postgres, workers, and queues. The application API is the primary integration and test seam. See [the architecture roadmap](docs/architecture/implementation-roadmap.md) and [ADRs](docs/adr/).
+KopiContext is a TypeScript modular monolith. The public web layer runs on Vercel; the private runtime owns the application API, Postgres, workers, and queues. The application API is the primary integration and test seam. Its Fastify baseline exposes an authenticated `GET /v1/healthz`; see [the private API runbook](docs/runtime/private-api.md), [architecture roadmap](docs/architecture/implementation-roadmap.md), and [ADRs](docs/adr/).
 
 Current code is deliberately small:
 
@@ -43,6 +44,8 @@ pnpm dev
 ```
 
 Open `http://localhost:3000/topics/how-singapores-government-works`.
+
+To run the private API locally, follow [its runbook](docs/runtime/private-api.md).
 
 ## Verify changes
 
