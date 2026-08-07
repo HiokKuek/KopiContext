@@ -2,6 +2,10 @@
 
 **Delivery link:** [Editorial workspace and approval workflow](../prd/0003-editorial-workflow.md), [source submission and agent processing](../prd/0004-source-submission-and-agent-processing.md), and roadmap milestones 3–4.
 
+The command boundaries and audit requirements for accepting or rejecting
+agent-prepared material are defined in the [editorial proposal-decision
+workflow](../architecture/editorial-proposal-decision-workflow.md).
+
 ## Purpose and boundary
 
 The editor workspace is the private, single-editor surface that turns a

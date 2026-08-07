@@ -99,6 +99,10 @@ All interfaces receive a clock and provider ports where time or external calls i
 4. Produce reviewable proposals: Topic/Subtopic placement, candidate Claims linked to excerpts, and a Briefing Template draft. None may accept a Source, change canonical taxonomy, or publish.
 5. Connect preparation outcomes to the editor workspace for accept/reject/return decisions.
 
+The explicit decision vocabulary, durable audit requirement, and safe
+published-revision model are specified in the
+[editorial proposal-decision workflow](editorial-proposal-decision-workflow.md).
+
 **Exit evidence:** a transcript Source Submission can be processed with fake providers into reviewable, auditable proposals; duplicate retries do not create duplicate content; no path auto-accepts or publishes.
 
 ### Milestone 5 — Analytics, operations, and controlled-launch readiness
