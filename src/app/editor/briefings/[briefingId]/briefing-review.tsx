@@ -78,7 +78,7 @@ export function BriefingReview({
               )}
             </section>
             {review.briefing.status === "draft" ? <EditorialSourceForm action={sourceAction} claimAction={claimAction} /> : null}
-            {review.briefing.status === "draft" ? <CurrentUpdateForm sources={review.acceptedSources} action={currentUpdateAction} /> : null}
+            {review.briefing.status !== "archived" ? <CurrentUpdateForm sources={review.acceptedSources} action={currentUpdateAction} /> : null}
             <CurrentUpdatesPanel updates={review.currentUpdates ?? []} action={currentUpdateTransitionAction} />
             <section aria-labelledby="audit-heading">
               <p className="section-kicker">Record</p>
