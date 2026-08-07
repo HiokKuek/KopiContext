@@ -7,10 +7,12 @@ import { EditorHeader } from "../../editor-workspace";
 import { TransitionPanel } from "./transition-panel";
 import type {
   EditorialClaimActionState,
+  CurrentUpdateActionState,
   EditorialSourceActionState,
   EditorialTransitionActionState,
 } from "./actions";
 import { EditorialSourceForm } from "./editorial-source-form";
+import { CurrentUpdateForm } from "./current-update-form";
 
 type TransitionAction = (state: EditorialTransitionActionState, formData: FormData) => Promise<EditorialTransitionActionState>;
 
@@ -20,12 +22,14 @@ export function BriefingReview({
   transitionAction,
   sourceAction,
   claimAction,
+  currentUpdateAction,
 }: Readonly<{
   editor: EditorIdentity;
   review: EditorialBriefingReview;
   transitionAction: TransitionAction;
   sourceAction: (state: EditorialSourceActionState, form: FormData) => Promise<EditorialSourceActionState>;
   claimAction: (sourceId: string) => (state: EditorialClaimActionState, form: FormData) => Promise<EditorialClaimActionState>;
+  currentUpdateAction: (state: CurrentUpdateActionState, form: FormData) => Promise<CurrentUpdateActionState>;
 }>) {
   return (
     <>
@@ -70,6 +74,7 @@ export function BriefingReview({
               )}
             </section>
             {review.briefing.status === "draft" ? <EditorialSourceForm action={sourceAction} claimAction={claimAction} /> : null}
+            {review.briefing.status === "draft" ? <CurrentUpdateForm sources={review.acceptedSources} action={currentUpdateAction} /> : null}
             <section aria-labelledby="audit-heading">
               <p className="section-kicker">Record</p>
               <h2 id="audit-heading">Editorial record</h2>
