@@ -15,6 +15,7 @@ KopiContext helps English-speaking Singaporeans gain enough accurate, source-bac
 - [Editor workspace v1 design](docs/design/editor-workspace-v1.md)
 - [Postgres persistence baseline](docs/runtime/persistence.md)
 - [Private application API baseline](docs/runtime/private-api.md)
+- [Browser analytics boundary](docs/runtime/analytics.md)
 - [Anonymous Topic-request handoff](docs/runtime/topic-requests.md)
 
 The first vertical slice is the civic Briefing, **How Singapore's Government Works**. It proves source submission, agent preparation, Editorial Approval, public reading, search, and anonymous analytics before the product expands its Topic catalogue.
@@ -37,7 +38,7 @@ Current code is deliberately small:
 - `src/modules/editorial/` owns state-transition rules, audit records, repositories, and the transport-neutral editorial command.
 - `src/modules/preparation/` owns the idempotent, provenance-preserving source-preparation interface. It can propose placement, candidate claims, and a draft, but cannot accept evidence or publish.
 - `src/app/` owns Next.js routes and presentation only; it consumes the content interface rather than embedding Briefing data.
-- `src/platform/api/` owns Fastify authentication and HTTP contracts. Its real Postgres repository and background-worker composition are the next operational step, so the command routes are tested ports rather than a provisioned editor backend.
+- `src/platform/api/` owns Fastify authentication, HTTP contracts, and explicit runtime composition. Production requires Postgres and composes the real public-catalogue and Editorial Workflow repositories; local-development mode is an opt-in reader-fixture mode with no durable editor, preparation, or analytics adapter.
 
 ## Run locally
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
+import { AnalyticsSearch } from "../analytics/analytics-search";
 import { TopicRequestForm } from "./topic-request-form";
 
 export const metadata: Metadata = {
@@ -54,6 +55,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </header>
 
       <main className="briefing-shell" id="main-content" aria-labelledby="search-heading">
+        <AnalyticsSearch hasResult={hasResult} query={query} />
         <header className="topic-proposition">
           <p className="eyebrow">Topic search</p>
           <h1 id="search-heading">Find a Briefing</h1>

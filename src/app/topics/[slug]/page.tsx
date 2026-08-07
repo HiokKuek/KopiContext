@@ -6,6 +6,7 @@ import {
   type BriefingVisualExplainer,
   type ConceptMapExplainer,
 } from "@/modules/content/published-briefings";
+import { AnalyticsTopicView } from "../../analytics/analytics-topic-view";
 
 type TopicPageProps = {
   params: Promise<{ slug: string }>;
@@ -150,6 +151,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
       </header>
 
       <main id="main-content">
+        <AnalyticsTopicView topicSlug={briefing.slug} />
         <article className="briefing-shell" aria-labelledby="briefing-title">
           <header className="topic-proposition" id="orient">
             <p className="eyebrow">Civic life · Briefing</p>
