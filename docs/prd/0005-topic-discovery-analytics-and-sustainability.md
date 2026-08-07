@@ -26,6 +26,7 @@ Use first-party anonymous analytics, Topic requests, failed searches, source opp
 - Record rotating pseudonymous sessions and the approved first-party events: page view, search, result click, no-result search, Topic view, section expansion, Current Update open, related Topic click, share, Topic request, and feedback.
 - Topic priority combines popularity, conversation value, freshness, and editorial judgement; its explanation is visible in the editorial workspace.
 - The launch catalogue is editable and seeds discovery rather than freezing the taxonomy.
+- The controlled-launch catalogue is complete only when every agreed launch Topic has one deliberately Published baseline Briefing. Each baseline must satisfy Briefing Template v1, have its Claims supported by editor-accepted Sources, display freshness information, and have an Editorial Approval audit record. Drafts, Source Submissions, local fixtures, and agent proposals are useful preparation but are not launch-completion evidence. The product team maintains the topic-by-topic evidence in the [launch content inventory](../product/launch-content-inventory.md).
 
 ## Testing Decisions
 

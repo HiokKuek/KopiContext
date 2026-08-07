@@ -2,6 +2,8 @@
 
 This is the editable controlled-launch catalogue for KopiContext. It implements the initial 25-Topic direction in [PRD 0005](../prd/0005-topic-discovery-analytics-and-sustainability.md). Inclusion means a Topic is a prioritised candidate for a source-backed Briefing; it does not imply that a Briefing has been approved or published.
 
+The accompanying [launch content inventory](launch-content-inventory.md) is the operational record for baseline scope, review cadence, candidate source families, and publication status. It is deliberately a planning document: neither a listed link nor a status of “prepared” makes material accepted evidence or published content.
+
 The editorial lead may add, merge, rename, defer, or retire Topics through the Editorial Workflow. Agents may propose changes with confidence and rationale but cannot change this canonical catalogue themselves.
 
 ## Civic understanding
@@ -46,6 +48,7 @@ The editorial lead may add, merge, rename, defer, or retire Topics through the E
 
 ## Catalogue rules
 
+- The controlled launch is complete only when all 25 Topics have a baseline Briefing in the **Published** Editorial Workflow state. Each must have Briefing Template v1 completeness, Claim-to-accepted-Source support, visible freshness information, and an Editorial Approval audit record. A draft, Source Submission, agent proposal, or local-development fixture does not meet this gate.
 - Every Topic must use the [Briefing Template](../prd/0002-briefing-template-and-reader-experience.md) before it can be published.
 - Civic Topics require primary official Sources where available; contested, interpretive, and current Claims need stronger corroboration.
 - Current developments belong in separate Current Updates, never inside an evergreen Briefing as if they were stable context.
