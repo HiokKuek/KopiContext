@@ -93,6 +93,36 @@ reviewed retrieval, provider, persistence, queue, and operational adapters.
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.
 
+## Anonymous analytics collection
+
+When the composition root supplies an anonymous analytics command, the public
+collection route is `POST /v1/public/analytics/events`. It is deliberately
+separate from private commands: browsers may send an approved event but never
+receive a private service credential, database access, or editorial capability.
+In production, expose this one path through the public web/BFF ingress; do not
+make the rest of the private API reachable from browsers.
+
+The route validates the existing first-party event allowlist before calling its
+injected delivery or persistence port. The port receives a newly constructed
+event with only the approved fields and opaque rotating session ID. It never
+receives a Fastify request, headers, user-agent, referrer, cookies, or client
+IP. Payloads containing raw IP addresses or IP-like field names are rejected
+before the port is called. The response is only `202 {"accepted":true}` and
+does not echo analytics data.
+
+Clients may supply an optional `Idempotency-Key` header. It must be an opaque
+8–200 character token using letters, digits, `.`, `_`, `:`, or `-`; do not use
+an account, email, IP address, or other identifier. The durable delivery
+adapter must treat a repeated key as one event. At the public ingress, apply a
+short, infrastructure-level rate limit to this path only. Any address-derived
+rate-limit state must be transient and must not be written to the analytics
+store or event payload.
+
+This route is not composed by `pnpm api:start` yet because the production
+analytics persistence/delivery adapter is still pending. Tests compose an
+in-memory command port and prove that invalid payloads, including raw IP data,
+cannot reach it.
+
 ## Vercel web client
 
 Server-rendered Vercel code uses `src/platform/web/private-api-client.ts`; do

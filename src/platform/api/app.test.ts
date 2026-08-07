@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { buildPrivateApi, type PublicCatalogueQuery } from "./app";
 import type { ServiceCredentialAuthenticator } from "./service-auth";
@@ -125,5 +125,29 @@ describe("private application API", () => {
     expect(response.json()).toEqual({
       error: { code: "not_found", message: "The requested Briefing does not exist." },
     });
+  });
+
+  it("allows anonymous analytics only through the explicitly public feature route", async () => {
+    const record = vi.fn();
+    const app = buildPrivateApi({
+      serviceAuthenticator: acceptedAuthenticator,
+      publicCatalogue,
+      anonymousAnalyticsEvents: { record },
+    });
+    apps.push(app);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/v1/public/analytics/events",
+      payload: {
+        type: "page-view",
+        session: { id: "kc_session_opaque-session-token", issuedAt: "2026-08-07T09:00:00.000Z" },
+        occurredAt: "2026-08-07T09:01:00.000Z",
+        path: "/",
+      },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(record).toHaveBeenCalledOnce();
   });
 });

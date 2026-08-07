@@ -14,12 +14,17 @@ import {
   registerSourceSubmissionRoute,
   type SourceSubmissionCommand,
 } from "./source-submission-route";
+import {
+  registerAnonymousAnalyticsEventRoute,
+  type AnonymousAnalyticsEventCommand,
+} from "./analytics-event-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
   sourceSubmissions?: SourceSubmissionCommand;
+  anonymousAnalyticsEvents?: AnonymousAnalyticsEventCommand;
   now?: () => Date;
 }>;
 
@@ -103,6 +108,10 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
 
     return briefing;
   });
+
+  if (dependencies.anonymousAnalyticsEvents) {
+    registerAnonymousAnalyticsEventRoute(app, dependencies.anonymousAnalyticsEvents);
+  }
 
   if (dependencies.editorialBriefingTransitions) {
     registerEditorialTransitionRoute(app, {
