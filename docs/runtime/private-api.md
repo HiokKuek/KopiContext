@@ -161,6 +161,20 @@ not_found`; a terminal/non-ready proposal returns `422 validation_failed`.
 The API does not expose raw preparation output or persistence details in those
 errors. This route is absent in restricted local-development fixture mode.
 
+### Accept a Source from a prepared Submission (Phase B1)
+
+`POST /v1/editorial/source-submissions/:submissionId/sources` is a separate,
+private BFF command for explicit Source acceptance. Its body includes an opaque
+idempotency key, server-derived `actorId`, expected proposal fingerprint, and
+the editor-entered Source metadata: title, publisher, type, canonical URL,
+retrieval date, relation, and rights note. Optional external identifier and
+publication date are supported. The route timestamps the command privately.
+
+It returns `201` with `{ kind: "created", acceptedSourceId, decisionId }`, or
+`200` with the same IDs for an idempotent replay. Stale output, duplicate
+canonical URLs, and idempotency collisions return the stable `409 conflict`
+envelope. It cannot create a Claim, change a Briefing, or publish content.
+
 ### Review prepared proposals
 
 `GET /v1/editorial/source-submissions/:submissionId` is a private,

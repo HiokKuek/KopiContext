@@ -27,12 +27,14 @@ import {
   registerPreparedProposalAcceptanceRoute,
   type PreparedProposalAcceptanceCommand,
 } from "./prepared-proposal-acceptance-route";
+import { registerSourceAcceptanceRoute, type SourceAcceptanceCommand } from "./source-acceptance-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
   preparedProposalAcceptances?: PreparedProposalAcceptanceCommand;
+  sourceAcceptances?: SourceAcceptanceCommand;
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -158,6 +160,16 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
           "validation_failed",
           "The prepared proposal cannot be accepted.",
         ),
+    });
+  }
+  if (dependencies.sourceAcceptances) {
+    registerSourceAcceptanceRoute(app, {
+      sourceAcceptances: dependencies.sourceAcceptances,
+      now,
+      invalid: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The prepared proposal does not exist."),
+      conflict: () => new ApiError(409, "conflict", "The proposal changed or this Source acceptance conflicts with existing evidence."),
+      rejected: () => new ApiError(422, "validation_failed", "The Source cannot be accepted from this submission."),
     });
   }
 
