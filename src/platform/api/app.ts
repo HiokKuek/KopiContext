@@ -35,6 +35,7 @@ import { registerHumanRevisionRoute, type HumanRevisionRouteDependencies } from 
 import { registerEditorialDraftRoute, type EditorialDraftRouteDependencies } from "./editorial-draft-route";
 import { registerEditorialSourceRoute } from "./editorial-source-route";
 import { registerEditorialClaimRoute, type EditorialClaimRouteDependencies } from "./editorial-claim-route";
+import { registerCurrentUpdateRoute } from "./current-update-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -48,6 +49,7 @@ export type PrivateApiDependencies = Readonly<{
   editorialDrafts?: EditorialDraftRouteDependencies["editorialDrafts"];
   editorialSources?: { accept(input: import("@/modules/evidence/accept-editorial-source-command").AcceptEditorialSourceRequest): Promise<unknown> };
   editorialClaims?: EditorialClaimRouteDependencies["editorialClaims"];
+  currentUpdates?: Parameters<typeof registerCurrentUpdateRoute>[1]["updates"];
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -212,6 +214,7 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
   if (dependencies.editorialDrafts) registerEditorialDraftRoute(app, { editorialDrafts: dependencies.editorialDrafts, now, invalid: (message) => new ApiError(400, "invalid_request", message), conflict: () => new ApiError(409, "conflict", "The Draft conflicts with existing editorial work."), rejected: () => new ApiError(422, "validation_failed", "The Draft cannot be created.") });
   if (dependencies.editorialSources) registerEditorialSourceRoute(app, { sources: dependencies.editorialSources, now, invalid: (message) => new ApiError(400, "invalid_request", message), conflict: () => new ApiError(409, "conflict", "The Source conflicts with existing evidence."), rejected: () => new ApiError(422, "validation_failed", "The Source cannot be accepted.") });
   if (dependencies.editorialClaims) registerEditorialClaimRoute(app, { editorialClaims: dependencies.editorialClaims, now, invalid: (message) => new ApiError(400, "invalid_request", message), conflict: () => new ApiError(409, "conflict", "The Draft changed or this Claim conflicts with existing editorial evidence."), notFound: () => new ApiError(404, "not_found", "The accepted Source does not exist."), rejected: () => new ApiError(422, "validation_failed", "The Claim cannot be created.") });
+  if (dependencies.currentUpdates) registerCurrentUpdateRoute(app, { updates: dependencies.currentUpdates, now, invalid: (message) => new ApiError(400, "invalid_request", message), notFound: () => new ApiError(404, "not_found", "The Briefing does not exist."), conflict: () => new ApiError(409, "conflict", "This Current Update conflicts with existing editorial work."), rejected: () => new ApiError(422, "validation_failed", "The Current Update cannot be created.") });
 
   if (dependencies.editorialReadModels) {
     registerEditorialReadRoutes(app, {
