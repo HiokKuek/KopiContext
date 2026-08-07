@@ -74,7 +74,7 @@ export function editorialTransitionPersistenceRequest(
 
 type BriefingTemplateContent = Omit<
   PublishedBriefing,
-  "slug" | "title" | "status" | "templateVersion" | "sources" | "lastReviewedAt"
+  "slug" | "title" | "status" | "templateVersion" | "sources" | "currentUpdates" | "lastReviewedAt"
 >;
 
 export type PublishedBriefingDatabaseRecord = Readonly<{
@@ -109,6 +109,7 @@ export function mapPublishedBriefing(
     templateVersion: "v1",
     ...content,
     sources: uniqueSources(record.sources),
+    currentUpdates: [],
     lastReviewedAt: record.publishedAt.toISOString().slice(0, 10),
   };
 }

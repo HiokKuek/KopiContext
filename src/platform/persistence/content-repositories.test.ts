@@ -44,6 +44,7 @@ describe("mapPublishedBriefing", () => {
       templateVersion: "v1",
       ...templateContent,
       sources: [{ title: "Constitution", publisher: "SSO", url: "https://sso.example/constitution" }],
+      currentUpdates: [],
       lastReviewedAt: "2026-08-07",
     });
   });

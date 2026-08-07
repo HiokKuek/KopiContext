@@ -82,5 +82,6 @@
     ,{"idx":11,"version":"7","when":1786080000000,"tag":"0011_editorial_draft_creation","breakpoints":true}
     ,{"idx":12,"version":"7","when":1786081000000,"tag":"0012_editorial_source_acceptance","breakpoints":true}
     ,{"idx":13,"version":"7","when":1786095971916,"tag":"0013_editorial_claim_creation","breakpoints":true}
+    ,{"idx":14,"version":"7","when":1786096929999,"tag":"0014_current_updates","breakpoints":true}
   ]
 }

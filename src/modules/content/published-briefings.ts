@@ -8,6 +8,15 @@ export type BriefingSource = {
   url: string;
 };
 
+/** A separately dated, source-backed development associated with a Topic. */
+export type PublishedCurrentUpdate = {
+  id: string;
+  title: string;
+  body: string;
+  effectiveAt: string;
+  sources: ReadonlyArray<BriefingSource>;
+};
+
 type SourceBacked = {
   sourceIds: ReadonlyArray<string>;
 };
@@ -92,6 +101,7 @@ export type PublishedBriefing = {
   questionsToAsk: ReadonlyArray<string>;
   mistakesToAvoid: ReadonlyArray<string>;
   sources: ReadonlyArray<BriefingSource>;
+  currentUpdates?: ReadonlyArray<PublishedCurrentUpdate>;
   lastReviewedAt: string;
 };
 
