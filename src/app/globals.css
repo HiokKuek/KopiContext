@@ -33,6 +33,17 @@ p { margin: 0 0 20px; }
 .briefing-meta a { color: var(--color-rain); font-weight: 650; }
 .overview { max-width: 770px; margin-bottom: 42px; border-left: 4px solid var(--color-rain); padding: 24px 26px 8px; background: var(--color-kopi-foam); }
 .overview p:last-child { font-size: 1.1rem; }
+.government-map { display: grid; gap: 28px; max-width: 980px; margin: 0 0 42px; padding: 30px 0 34px; border-top: 1px solid var(--color-ink); border-bottom: 1px solid var(--color-mist); }
+.government-map-intro { max-width: 670px; }
+.government-map-intro p:last-child { margin-bottom: 0; font-size: 1.08rem; }
+.branch-diagram { font-family: var(--utility-face); }
+.diagram-root { width: fit-content; margin: 0 auto; border: 2px solid var(--color-ink); border-radius: 6px; padding: 8px 18px; font-size: .83rem; font-weight: 800; letter-spacing: .02em; }
+.branch-diagram ol { position: relative; display: grid; gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
+.branch-diagram ol::before { position: absolute; top: -12px; bottom: -12px; left: 16px; width: 2px; background: var(--color-mist); content: ""; }
+.branch-diagram li { position: relative; display: grid; gap: 2px; border: 1px solid var(--color-mist); border-left: 4px solid var(--color-rain); border-radius: 5px; padding: 13px 16px 13px 25px; background: #fffdf8; }
+.branch-diagram li::before { position: absolute; top: 23px; left: -4px; width: 12px; border-top: 2px solid var(--color-mist); content: ""; }
+.branch-diagram strong { font-size: .85rem; }
+.branch-diagram span { color: var(--color-muted); font-size: .76rem; line-height: 1.35; }
 .reading-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; }
 .conversation-path { overflow-x: auto; border-bottom: 1px solid var(--color-mist); padding-bottom: 14px; font-family: var(--utility-face); }
 .conversation-path ol { display: flex; width: max-content; min-width: 100%; margin: 0; padding: 0; list-style: none; }
@@ -57,6 +68,32 @@ p { margin: 0 0 20px; }
 .context-pair p, .participate-grid ul { margin-bottom: 0; }
 .participate-grid > section:first-child { border-top: 3px solid var(--color-rain); }
 .participate-grid > section:last-child { border-top: 3px solid var(--color-ink); }
+.branch-cards { display: grid; gap: 14px; }
+.branch-card { border: 1px solid var(--color-mist); border-top: 4px solid var(--color-rain); padding: 20px; background: #fffdf8; }
+.branch-card:nth-child(2) { border-top-color: var(--color-ink); }
+.branch-card:nth-child(3) { border-top-color: #8c6d3c; }
+.branch-card h3 { font-family: var(--reading-face); font-size: 1.28rem; line-height: 1.25; }
+.branch-card p { margin-bottom: 14px; font-size: .93rem; }
+.branch-label { margin: 0 0 8px !important; color: var(--color-rain); font-family: var(--utility-face); font-size: .7rem !important; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.branch-card:nth-child(2) .branch-label { color: var(--color-ink); }
+.branch-card:nth-child(3) .branch-label { color: #6e5127; }
+.branch-example { color: var(--color-muted); }
+.branch-card a { color: var(--color-rain); font-family: var(--utility-face); font-size: .83rem; font-weight: 750; }
+.role-comparison { border-top: 1px solid var(--color-mist); padding-top: 30px; }
+.table-scroll { overflow-x: auto; border: 1px solid var(--color-mist); }
+.role-comparison table { width: 100%; min-width: 490px; border-collapse: collapse; font-size: .92rem; text-align: left; }
+.role-comparison th, .role-comparison td { border-bottom: 1px solid var(--color-mist); padding: 14px 16px; vertical-align: top; }
+.role-comparison thead th { background: var(--color-kopi-foam); font-family: var(--utility-face); font-size: .77rem; letter-spacing: .03em; }
+.role-comparison tbody th { width: 32%; font-family: var(--utility-face); font-size: .84rem; }
+.role-comparison tbody tr:last-child th, .role-comparison tbody tr:last-child td { border-bottom: 0; }
+.government-flow { border-top: 1px solid var(--color-mist); padding-top: 30px; }
+.government-flow > ol { margin: 0 0 28px; padding: 0; list-style: none; counter-reset: none; }
+.government-flow > ol li { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 14px; margin: 0; padding: 0 0 18px; }
+.government-flow > ol li:not(:last-child)::after { position: absolute; top: 31px; bottom: 0; left: 15px; border-left: 2px solid var(--color-mist); content: ""; }
+.government-flow > ol span { position: relative; z-index: 1; display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: var(--color-rain); color: white; font-family: var(--utility-face); font-size: .75rem; font-weight: 800; }
+.government-flow > ol p { margin: 2px 0 0; }
+.policy-example { border-left: 4px solid var(--color-ink); padding: 20px 22px 4px; background: var(--color-kopi-foam); }
+.policy-example p { font-size: .95rem; }
 .trust-footer { border-top: 1px solid var(--color-ink); padding-top: 28px; }
 .source-intro, .footer-note { color: var(--color-muted); }
 .source-list { margin: 0 0 28px; padding: 0; list-style: none; }
@@ -67,6 +104,6 @@ p { margin: 0 0 20px; }
 .empty-page { width: min(100% - 40px, 640px); margin: 15vh auto; }
 .empty-page h1 { font-size: clamp(2.5rem, 7vw, 4.5rem); }
 .text-link { color: var(--color-rain); font-family: var(--utility-face); font-weight: 700; }
-@media (min-width: 760px) { .briefing-shell { padding-top: 72px; } .context-pair, .participate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 760px) { .briefing-shell { padding-top: 72px; } .government-map { grid-template-columns: minmax(0, .85fr) minmax(350px, 1.15fr); align-items: center; gap: 44px; } .branch-diagram ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 31px; padding-top: 18px; } .branch-diagram ol::before { top: 0; right: 16.66%; bottom: auto; left: 16.66%; width: auto; height: 2px; } .branch-diagram li { min-height: 118px; padding: 22px 14px 14px; } .branch-diagram li::before { top: -22px; left: 50%; width: 2px; height: 21px; border-top: 0; border-left: 2px solid var(--color-mist); } .branch-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } .context-pair, .participate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 980px) { .reading-grid { grid-template-columns: 190px minmax(0, 730px); gap: 64px; } .conversation-path { position: sticky; top: 24px; align-self: start; overflow: visible; border-bottom: 0; padding: 4px 0 0; } .conversation-path ol { display: block; width: auto; } .conversation-path li { min-width: 0; border-left: 2px solid var(--color-mist); } .conversation-path a { padding: 0 0 20px 16px; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

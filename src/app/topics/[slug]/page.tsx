@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
+import {
+  getPublishedBriefingBySlug,
+  type CivicGovernmentModel,
+} from "@/modules/content/published-briefings";
 
 type TopicPageProps = {
   params: Promise<{ slug: string }>;
@@ -45,6 +48,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
   }
 
   const reviewedDate = formatReviewedDate(briefing.lastReviewedAt);
+  const governmentModel: CivicGovernmentModel | undefined = briefing.civicGovernmentModel;
 
   return (
     <>
@@ -69,6 +73,25 @@ export default async function TopicPage({ params }: TopicPageProps) {
               <a href="#sources">View sources</a>
             </div>
           </header>
+
+          {governmentModel ? <section className="government-map" aria-labelledby="government-map-heading">
+            <div className="government-map-intro">
+              <p className="section-kicker">The big picture</p>
+              <h2 id="government-map-heading">Start with the map</h2>
+              <p>{governmentModel.introduction}</p>
+            </div>
+            <div className="branch-diagram" aria-label="Singapore Government has three branches: Legislature, Executive, and Judiciary">
+              <div className="diagram-root">Singapore Government</div>
+              <ol>
+                {governmentModel.branches.map((branch) => (
+                  <li key={branch.id}>
+                    <strong>{branch.name}</strong>
+                    <span>{branch.plainLanguagePurpose}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section> : null}
 
           <section className="overview" aria-labelledby="overview-heading">
             <p className="section-kicker">Start here</p>
@@ -98,7 +121,57 @@ export default async function TopicPage({ params }: TopicPageProps) {
                 <p>{briefing.fiveMinuteExplanation}</p>
               </section>
 
-              <section aria-labelledby="terms-heading">
+              {governmentModel ? <>
+              <section className="branch-section" aria-labelledby="branches-heading">
+                <p className="section-kicker">The three branches</p>
+                <h2 id="branches-heading">Each branch has a different job</h2>
+                <div className="branch-cards">
+                  {governmentModel.branches.map((branch) => (
+                    <section className="branch-card" key={branch.id} aria-labelledby={`${branch.id}-heading`}>
+                      <p className="branch-label">{branch.name}</p>
+                      <h3 id={`${branch.id}-heading`}>{branch.plainLanguagePurpose}</h3>
+                      <p><strong>Who belongs here:</strong> {branch.institutions.join(", ")}.</p>
+                      <p className="branch-example">{branch.everydayExample}</p>
+                      <a href="#key-terms">{branch.learnMoreLabel}</a>
+                    </section>
+                  ))}
+                </div>
+              </section>
+
+              <section className="role-comparison" aria-labelledby="roles-heading">
+                <p className="section-kicker">A common mix-up</p>
+                <h2 id="roles-heading">{governmentModel.officeComparison.title}</h2>
+                <h3>{governmentModel.officeComparison.question}</h3>
+                <p>{governmentModel.officeComparison.answer}</p>
+                <div className="table-scroll">
+                  <table>
+                    <thead><tr><th scope="col">Role</th><th scope="col">Main purpose</th></tr></thead>
+                    <tbody>
+                      {governmentModel.officeComparison.roles.map((item) => (
+                        <tr key={item.role}><th scope="row">{item.role}</th><td>{item.purpose}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section className="government-flow" aria-labelledby="flow-heading">
+                <p className="section-kicker">How the parts connect</p>
+                <h2 id="flow-heading">{governmentModel.policyFlow.title}</h2>
+                <p>{governmentModel.policyFlow.introduction}</p>
+                <ol>
+                  {governmentModel.policyFlow.steps.map((step, index) => (
+                    <li key={step.title}><span aria-hidden="true">{index + 1}</span><p><strong>{step.title}.</strong> {step.explanation}</p></li>
+                  ))}
+                </ol>
+                <aside className="policy-example" aria-labelledby="policy-example-heading">
+                  <h3 id="policy-example-heading">{governmentModel.policyFlow.exampleTitle}</h3>
+                  <p>{governmentModel.policyFlow.exampleSummary}</p>
+                </aside>
+              </section>
+              </> : null}
+
+              <section id="key-terms" aria-labelledby="terms-heading">
                 <h2 id="terms-heading">A few useful terms</h2>
                 <dl className="terms-list">
                   {briefing.keyTerms.map((item) => (
