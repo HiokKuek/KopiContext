@@ -23,6 +23,21 @@ describe("private API runtime composition", () => {
     });
     expect(health.statusCode).toBe(200);
 
+    // The public analytics route is composed only in the durable production
+    // runtime. A raw-IP payload is rejected before the fake database is used.
+    const rejectedAnalytics = await runtime.app.inject({
+      method: "POST",
+      url: "/v1/public/analytics/events",
+      payload: {
+        type: "page-view",
+        session: { id: "kc_session_opaque-session-token", issuedAt: "2026-08-07T09:00:00.000Z" },
+        occurredAt: "2026-08-07T09:01:00.000Z",
+        path: "/",
+        ipAddress: "203.0.113.4",
+      },
+    });
+    expect(rejectedAnalytics.statusCode).toBe(400);
+
     // This fails before persistence is touched, but proves the production
     // composition registers the private Topic-request command route.
     const topicRequest = await runtime.app.inject({

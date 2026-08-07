@@ -10,6 +10,7 @@ import {
 } from "@/platform/persistence/content-repositories";
 import { DrizzleEditorialReadRepository } from "@/platform/persistence/editorial-read-repository";
 import { DrizzleTopicRequestDemandRepository } from "@/platform/persistence/topic-request-repository";
+import { DrizzleAnonymousAnalyticsRepository } from "@/platform/persistence/anonymous-analytics-repository";
 import { DrizzleSourceSubmissionIntakeRepository } from "@/platform/persistence/source-submission-intake-repository";
 import { DrizzleSourceSubmissionReadRepository } from "@/platform/persistence/source-submission-read-repository";
 import {
@@ -64,6 +65,7 @@ export function composePrivateApiRuntime(
   const editorialRepository = new DrizzleEditorialRepository(persistence.db);
   const topicRequestDemands = new DrizzleTopicRequestDemandRepository(persistence.db);
   const sourceSubmissionIntake = new DrizzleSourceSubmissionIntakeRepository(persistence.db);
+  const anonymousAnalyticsEvents = new DrizzleAnonymousAnalyticsRepository(persistence.db);
   const app = buildPrivateApi({
     serviceAuthenticator: authenticator,
     publicCatalogue: new DrizzlePublishedCatalogueRepository(persistence.db),
@@ -72,6 +74,7 @@ export function composePrivateApiRuntime(
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
     topicRequests: createTopicRequestCommand(topicRequestDemands),
+    anonymousAnalyticsEvents,
   });
 
   return {

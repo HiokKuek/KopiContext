@@ -36,6 +36,13 @@
       "when": 1786075316998,
       "tag": "0004_source-submission-worker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1786075914965,
+      "tag": "0005_anonymous-analytics-events",
+      "breakpoints": true
     }
   ]
 }

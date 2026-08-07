@@ -31,6 +31,13 @@ boundaries in `CONTEXT.md`:
   stores a normalised requested Topic, count, and first/last acceptance times;
   it must never become a per-reader request log or retain network, session,
   identity, device, or free-form fields.
+- `anonymous_analytics_events` is an append-only, first-party event log for
+  already validated allow-listed events. It stores only an opaque rotating
+  session ID, event time, optional opaque delivery key, and the specific
+  event fields defined by `modules/analytics`; it has no columns for IPs,
+  headers, cookies, account IDs, user agents, device properties, or arbitrary
+  event JSON. Its received-time index exists for retention work, while event
+  type/time and Topic/time indexes support bounded aggregate queries.
 
 The schema protects vocabulary, identifiers, relationships, merge boundaries,
 confidence ranges, and complete agent-generation provenance. It intentionally
@@ -38,6 +45,21 @@ does not duplicate application rules such as “only the editor may publish”:
 those rules require authenticated actor policy and stay in the editorial
 application seam. Never bypass that seam by writing a publication status
 directly through a table adapter.
+
+## Analytics retention and aggregate reads
+
+`DrizzleAnonymousAnalyticsRepository` persists the canonical event object
+constructed by the public API's validator. It never accepts an HTTP request.
+An optional delivery idempotency key makes browser retries safe; a duplicate
+key is ignored. Its aggregate read groups events by day, event type, and
+published Topic slug, so future discovery work can use counts without a
+reader-facing event-log UI.
+
+Keep raw events for the shortest period that supports debugging and aggregate
+verification, then delete by `received_at` using a scheduled private-runtime
+job. Before deletion is enabled, document the chosen retention period and
+verify aggregate needs are met. Do not retain raw events indefinitely, join
+them to other datasets, or use the opaque session value to build profiles.
 
 ## Source-preparation repository
 

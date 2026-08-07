@@ -50,6 +50,19 @@ export const sourcePreparationResultState = pgEnum("source_preparation_result_st
 export const briefingRevisionOrigin = pgEnum("briefing_revision_origin", ["human", "agent"]);
 export const claimStatus = pgEnum("claim_status", ["candidate", "verified", "rejected"]);
 export const claimSupportKind = pgEnum("claim_support_kind", ["direct", "contextual"]);
+export const anonymousAnalyticsEventType = pgEnum("anonymous_analytics_event_type", [
+  "page-view",
+  "search",
+  "search-result-click",
+  "no-result-search",
+  "topic-view",
+  "section-expanded",
+  "current-update-opened",
+  "related-topic-click",
+  "share",
+  "topic-request",
+  "feedback",
+]);
 
 const createdAt = timestamp("created_at", { withTimezone: true, mode: "date" })
   .defaultNow()
@@ -108,6 +121,42 @@ export const topicRequestDemands = pgTable(
       "topic_request_demands_timestamp_order",
       sql`${table.firstRequestedAt} <= ${table.lastRequestedAt}`,
     ),
+  ],
+);
+
+/**
+ * A deliberately narrow first-party event log. Its columns are the complete
+ * allow-list from `modules/analytics`, so request/IP/header/device metadata
+ * has no persistence destination. Session IDs are opaque and rotate in the
+ * browser; events are retained only long enough to produce aggregate insight.
+ */
+export const anonymousAnalyticsEvents = pgTable(
+  "anonymous_analytics_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventType: anonymousAnalyticsEventType("event_type").notNull(),
+    sessionId: text("session_id").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    idempotencyKey: text("idempotency_key").unique(),
+    path: text("path"),
+    query: text("query"),
+    topicSlug: text("topic_slug"),
+    resultPosition: integer("result_position"),
+    sectionId: text("section_id"),
+    updateId: text("update_id"),
+    relatedTopicSlug: text("related_topic_slug"),
+    shareMethod: text("share_method"),
+    requestedTopic: text("requested_topic"),
+    feedbackSentiment: text("feedback_sentiment"),
+  },
+  (table) => [
+    index("anonymous_analytics_events_received_at_idx").on(table.receivedAt),
+    index("anonymous_analytics_events_type_occurred_at_idx").on(table.eventType, table.occurredAt),
+    index("anonymous_analytics_events_topic_occurred_at_idx").on(table.topicSlug, table.occurredAt),
+    check("anonymous_analytics_events_session_not_empty", sql`length(${table.sessionId}) > 0`),
   ],
 );
 
@@ -359,6 +408,8 @@ export type TopicRow = typeof topics.$inferSelect;
 export type NewTopicRow = typeof topics.$inferInsert;
 export type TopicRequestDemandRow = typeof topicRequestDemands.$inferSelect;
 export type NewTopicRequestDemandRow = typeof topicRequestDemands.$inferInsert;
+export type AnonymousAnalyticsEventRow = typeof anonymousAnalyticsEvents.$inferSelect;
+export type NewAnonymousAnalyticsEventRow = typeof anonymousAnalyticsEvents.$inferInsert;
 export type BriefingRow = typeof briefings.$inferSelect;
 export type NewBriefingRow = typeof briefings.$inferInsert;
 export type BriefingRevisionRow = typeof briefingRevisions.$inferSelect;
