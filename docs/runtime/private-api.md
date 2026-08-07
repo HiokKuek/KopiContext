@@ -385,6 +385,17 @@ prefix.
 
 ## Verify the boundary
 
+## Source acceptance from a prepared submission
+
+The protected Source Submission review page may separately accept the material
+as an Accepted Source through `POST /v1/editorial/source-submissions/:submissionId/sources`.
+Its same-origin Server Action re-authenticates, derives the actor from the
+session, supplies the exact prepared-output fingerprint, generates an opaque
+idempotency key, and sends editor-reviewed source metadata only once. It
+requires an explicit confirmation. A successful result revalidates the review
+and displays the Accepted Source ID. This command intentionally does **not**
+create or verify candidate Claims, revise a Briefing, or publish content.
+
 `src/platform/api/app.test.ts` calls the Fastify adapter with `app.inject()`.
 It verifies the success contract, `/v1` credential gate, and stable errors
 without binding a port or requiring Postgres.
