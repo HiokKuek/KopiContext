@@ -97,6 +97,11 @@ OAuth credentials, and an approved retrieval/AI provider for workers. Until an
 AI provider is configured, workers remain provider-neutral and cannot invent a
 production proposal source.
 
+The worker and a future daily/weekly proposal scheduler are deliberately
+separate. The worker prepares only material that has entered the private queue;
+the scheduler will later create bounded, editor-visible proposals and will
+never publish. See the [worker and scheduler runbook](docs/runtime/source-preparation-worker.md).
+
 ## Run locally
 
 Requires Node 22+ and pnpm 10.
@@ -139,6 +144,7 @@ back to `DATABASE_URL`; see the [persistence runbook](docs/runtime/persistence.m
 | Editorial states and approval rules | [Editorial workflow PRD](docs/prd/0003-editorial-workflow.md) |
 | How source material becomes a reviewable proposal | [Source-processing PRD](docs/prd/0004-source-submission-and-agent-processing.md) |
 | Private API, persistence, authentication, and deployment | [Runtime documentation](docs/runtime/) |
+| Enable the private worker or plan a daily/weekly proposal scheduler | [Worker and scheduler runbook](docs/runtime/source-preparation-worker.md) |
 | Set up OMV, the private Cloudflare connector, and guarded GitHub deployment | [OMV deployment guide](docs/runtime/omv-github-deployment.md) |
 | Domain language | [CONTEXT.md](CONTEXT.md) |
 | Agent workflow, team ownership, and project conventions | [AGENTS.md](AGENTS.md), [team charters](docs/teams/), and [development workflow](docs/agents/development-workflow.md) |
