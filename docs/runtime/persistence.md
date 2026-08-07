@@ -54,6 +54,28 @@ composition can therefore retrieve and prepare material safely, but an editor
 must still accept Sources, verify Claims, and approve publication through
 their respective application commands.
 
+## Source-preparation worker foundation
+
+`DrizzleSourceSubmissionWorkerQueue` turns durable `submitted` Source
+Submissions into leased private-worker jobs. A claim uses Postgres row locking
+with `SKIP LOCKED`, so concurrent workers do not process the same row at once.
+The claim stores a worker ID, lease expiry, attempt count, and processing
+history. Expired leases become eligible again; a worker never assumes that a
+process which died mid-job completed its work.
+
+`createSourceSubmissionWorker` runs one claimed job through an injected
+provider-neutral preparation port. The production runtime does not compose a
+retriever or model yet. Unexpected job failures have a bounded retry schedule;
+once the configured attempt limit is reached, the submission moves to
+`escalated` with a safe error record for editorial attention. A preparation
+result still uses the existing proposal-only persistence seam and cannot
+accept Sources, create Claims, alter Topics, or publish a Briefing.
+
+Before enabling a real worker, provide reviewed rights-aware retrieval and AI
+adapters, a process scheduler, monitoring/alerts, and a documented retry
+policy. Do not put any of those provider calls in the public web or API
+request path.
+
 ## Run a migration
 
 Set a URL for an isolated local, staging, or production database, then run the

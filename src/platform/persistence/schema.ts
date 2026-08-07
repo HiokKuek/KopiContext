@@ -200,6 +200,12 @@ export const sourceSubmissions = pgTable(
     processingStatus: sourceSubmissionStatus("processing_status")
       .default("submitted")
       .notNull(),
+    processingAttemptCount: integer("processing_attempt_count").default(0).notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true, mode: "date" }),
+    processingStartedAt: timestamp("processing_started_at", { withTimezone: true, mode: "date" }),
+    processingLeaseExpiresAt: timestamp("processing_lease_expires_at", { withTimezone: true, mode: "date" }),
+    processingWorkerId: text("processing_worker_id"),
+    lastProcessingError: text("last_processing_error"),
     preparationResultState: sourcePreparationResultState("preparation_result_state"),
     preparationFailure: text("preparation_failure"),
     duplicateOfSubmissionId: uuid("duplicate_of_submission_id").references((): AnyPgColumn => sourceSubmissions.id, {
@@ -225,6 +231,7 @@ export const sourceSubmissions = pgTable(
   },
   (table) => [
     index("source_submissions_status_idx").on(table.processingStatus),
+    index("source_submissions_worker_claim_idx").on(table.processingStatus, table.nextAttemptAt),
     index("source_submissions_fingerprint_idx").on(table.contentFingerprint),
     index("source_submissions_canonical_identifier_idx").on(table.canonicalIdentifier),
     index("source_submissions_duplicate_of_idx").on(table.duplicateOfSubmissionId),

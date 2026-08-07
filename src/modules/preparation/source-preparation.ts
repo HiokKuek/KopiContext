@@ -57,7 +57,7 @@ export type AgentPreparationProposal = {
 };
 
 export type PreparationTrace = {
-  stage: "queued" | "retrieved" | "deduplicated" | "prepared" | "escalated" | "failed";
+  stage: "queued" | "processing" | "retry-scheduled" | "retrieved" | "deduplicated" | "prepared" | "escalated" | "failed";
   occurredAt: string;
   detail: string;
 };

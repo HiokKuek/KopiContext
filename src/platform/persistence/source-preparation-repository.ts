@@ -133,6 +133,11 @@ export function sourcePreparationPersistenceValues(result: SourcePreparationResu
     submittedAt: asDate(submission.submittedAt),
     rightsNote: submission.rightsNote,
     processingHistory: result.history,
+    nextAttemptAt: null,
+    processingStartedAt: null,
+    processingLeaseExpiresAt: null,
+    processingWorkerId: null,
+    lastProcessingError: null,
     updatedAt: new Date(),
   };
 
@@ -294,6 +299,8 @@ function isTrace(value: unknown): value is PreparationTrace {
   if (!isRecord(value)) return false;
   return (
     (value.stage === "queued" ||
+      value.stage === "processing" ||
+      value.stage === "retry-scheduled" ||
       value.stage === "retrieved" ||
       value.stage === "deduplicated" ||
       value.stage === "prepared" ||
