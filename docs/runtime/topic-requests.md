@@ -18,7 +18,7 @@ Content-Type: application/json
 ```
 
 That endpoint is intentionally a **web BFF**, not a browser route to the
-private API. Its server-side composition must:
+private API. Its server-side composition:
 
 1. run `validateTopicRequest` from `src/modules/discovery/topic-request.ts`;
 2. send the validated `TopicRequest` through the `TopicRequestTransport` port;
@@ -52,9 +52,11 @@ free-form message. The editor can use the aggregate as demand evidence, but it
 does not create a Topic or publish a Briefing automatically.
 
 The private API production composition supplies this command and repository.
-The public same-origin BFF route is still a separate web-composition task, so
-the search form must remain honest about availability until that route is
-connected and tested.
+The public BFF is implemented at `src/app/api/topic-requests/route.ts`; it uses
+the server-only client composition in `src/platform/web/topic-request-bff.ts`.
+It resolves `PRIVATE_API_BASE_URL` and `PRIVATE_API_SERVICE_CREDENTIAL` only on
+the server, and returns a generic `503` response for configuration or private
+API failures rather than exposing credential or infrastructure details.
 
 ## Domain contract
 

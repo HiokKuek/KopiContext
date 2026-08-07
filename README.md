@@ -39,6 +39,9 @@ Current code is deliberately small:
 - `src/modules/preparation/` owns the idempotent, provenance-preserving source-preparation interface. It can propose placement, candidate claims, and a draft, but cannot accept evidence or publish.
 - `src/app/` owns Next.js routes and presentation only; it consumes the content interface rather than embedding Briefing data.
 - `src/platform/api/` owns Fastify authentication, HTTP contracts, and explicit runtime composition. Production requires Postgres and composes the real public-catalogue and Editorial Workflow repositories; local-development mode is an opt-in reader-fixture mode with no durable editor, preparation, or analytics adapter.
+- `src/platform/web/` owns server-only BFF adapters. The Topic-request route
+  validates a single Topic again and forwards it through the authenticated
+  private API client; it retains no reader identity or browser metadata.
 
 ## Run locally
 
