@@ -21,7 +21,8 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'migration_user')\gexe
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'api_user', :'api_password')
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'api_user')\gexec
 
-GRANT CONNECT ON DATABASE :"database" TO :"migration_user", :"api_user";
+GRANT CONNECT, CREATE ON DATABASE :"database" TO :"migration_user";
+GRANT CONNECT ON DATABASE :"database" TO :"api_user";
 GRANT USAGE, CREATE ON SCHEMA public TO :"migration_user";
 GRANT USAGE ON SCHEMA public TO :"api_user";
 ALTER DEFAULT PRIVILEGES FOR ROLE :"migration_user" IN SCHEMA public

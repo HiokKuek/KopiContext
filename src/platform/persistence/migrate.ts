@@ -5,8 +5,12 @@ import { createPostgresPersistence } from "./postgres";
 
 const persistence = createPostgresPersistence(postgresConnectionConfigFromEnvironment());
 
-try {
-  await migrate(persistence.db, { migrationsFolder: "drizzle" });
-} finally {
-  await persistence.close();
+async function main() {
+  try {
+    await migrate(persistence.db, { migrationsFolder: "drizzle" });
+  } finally {
+    await persistence.close();
+  }
 }
+
+void main();
