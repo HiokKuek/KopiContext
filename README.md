@@ -1,106 +1,141 @@
 # KopiContext
 
-KopiContext helps English-speaking Singaporeans gain enough accurate, source-backed context to join a conversation thoughtfully. It is a conversation-briefing product: clear, friendly, source-backed context—not a news site or encyclopedia.
+KopiContext gives English-speaking Singaporeans concise, source-backed context
+so they can join a conversation thoughtfully. It turns a complicated subject
+into a friendly Briefing: enough of the map to understand what matters, where
+the information came from, and what questions are worth asking next.
 
-## Start here
+It is not a news feed or an encyclopedia. It is a calm, readable starting
+point for understanding Singapore.
 
-- [Product foundation PRD](docs/prd/0001-product-foundation.md)
-- [Domain glossary](CONTEXT.md)
-- [Architecture decisions](docs/adr/)
-- [Agent development workflow](docs/agents/development-workflow.md)
-- [Agent instructions](AGENTS.md)
-- [Team charters](docs/teams/)
-- [Implementation roadmap](docs/architecture/implementation-roadmap.md)
-- [Design and voice standard](docs/design/briefing-experience.md)
-- [Editor workspace v1 design](docs/design/editor-workspace-v1.md)
-- [Postgres persistence baseline](docs/runtime/persistence.md)
-- [Private application API baseline](docs/runtime/private-api.md)
-- [Private-server container deployment](docs/runtime/private-server-deployment.md)
-- [Browser analytics boundary](docs/runtime/analytics.md)
-- [Anonymous Topic-request handoff](docs/runtime/topic-requests.md)
-- [Single-editor authentication foundation](docs/runtime/editor-auth.md)
+The first Briefing is **[How Singapore's Government Works](/topics/how-singapores-government-works)**.
 
-The first vertical slice is the civic Briefing, **How Singapore's Government Works**. It proves source submission, agent preparation, Editorial Approval, public reading, search, and anonymous analytics before the product expands its Topic catalogue.
+## How it works
 
-## Current application
+```text
+Reader finds a Topic
+  → reads a published, source-backed Briefing
+  → can search or request a missing Topic
 
-The application is a Next.js App Router project. Its first public route is:
+Editor signs in
+  → submits a source, URL, document, or transcript
+  → reviews agent-prepared suggestions and evidence
+  → explicitly approves and publishes a Briefing
+```
 
-- `/topics/how-singapores-government-works` — a responsive civic Briefing rendered from the framework-independent published-content interface.
+Agents can organise material, suggest a Topic or Subtopic, extract candidate
+Claims, and draft a Briefing. They cannot accept Sources, change the canonical
+taxonomy, or publish. A human editor is always the approval gate.
 
-The reader page separates evergreen Briefing material from Current Updates, shows Sources and review date, supports keyboard navigation, and follows the project voice: friendly, plain, and concise.
+### What readers get
 
-## Architecture
+- Mobile-friendly, plain-English Briefings with a useful mental model before
+  the detail.
+- Clear Sources and a review date, so readers can judge where an explanation
+  came from.
+- Anonymous search, Topic requests, and minimal first-party analytics. The
+  product does not require reader accounts or retain raw IP addresses.
 
-KopiContext is a TypeScript modular monolith. The public web layer runs on Vercel; the private runtime owns the application API, Postgres, workers, and queues. The application API is the primary integration and test seam. Its Fastify boundary has a health check plus authenticated command contracts for source submission and editorial transitions; see [the private API runbook](docs/runtime/private-api.md), [architecture roadmap](docs/architecture/implementation-roadmap.md), and [ADRs](docs/adr/).
+### What the editor gets
 
-Current code is deliberately small:
+- A Google-authenticated, single-editor workspace.
+- A review queue and detailed Briefing view with completeness, Claims,
+  accepted Sources, provenance, freshness, and audit history.
+- Deliberate workflow actions: Draft → Needs verification → In editorial
+  review → Approved → Published → Archived.
+- A protected Source Submission form. New material is queued durably; workers
+  may prepare proposals, but no worker can publish automatically.
 
-- `src/modules/content/` owns the typed published Briefing fixture and public retrieval interface.
-- `src/modules/editorial/` owns state-transition rules, audit records, repositories, and the transport-neutral editorial command.
-- `src/modules/preparation/` owns the idempotent, provenance-preserving source-preparation interface. It can propose placement, candidate claims, and a draft, but cannot accept evidence or publish.
-- `src/app/` owns Next.js routes and presentation only; it consumes the content interface rather than embedding Briefing data.
-- `src/platform/api/` owns Fastify authentication, HTTP contracts, and explicit runtime composition. Production requires Postgres and composes the real public-catalogue and Editorial Workflow repositories; local-development mode is an opt-in reader-fixture mode with no durable editor, preparation, or analytics adapter.
-- `src/platform/web/` owns server-only BFF adapters. The Topic-request route
-  validates a single Topic again and forwards it through the authenticated
-  private API client; it retains no reader identity or browser metadata.
-- Public reader routes use the same server-only private API client in
-  production. `PUBLIC_CATALOGUE_SLUGS` is the deliberately small published
-  catalogue manifest used for reader search; checked-in Briefing fixtures are
-  available only with `PUBLIC_CATALOGUE_RUNTIME_MODE=local-development`.
-  The editor queue follows the same server-only seam and reports a truthful
-  unavailable state until its private read endpoint is composed. Editor
-  Briefing review and transition actions are also server-only BFFs: each
-  mutation derives its audit actor from the Auth.js session and calls the
-  private API once.
-  The protected Source Submission form similarly derives the editor identity
-  and provenance server-side, then queues material through the private API;
-  browsers receive only a safe queue acknowledgement.
+## Architecture at a glance
+
+KopiContext is a TypeScript modular monolith with a deliberate public/private
+boundary:
+
+```text
+Reader or editor browser
+  → Vercel Next.js web app
+  → server-side authenticated request
+  → private Fastify application API
+  → private Postgres + workers
+```
+
+The browser never receives database access or the private service credential.
+In production, reader pages retrieve published content server-side through the
+private API. The private runtime owns editorial workflow, source intake,
+worker jobs, and Postgres persistence.
+
+The deployment package is designed for Vercel plus a private server: the
+private API and Postgres are not published through a public container port.
+
+## Current scope
+
+The project already includes:
+
+- The public civic Briefing, search, no-result Topic requests, and privacy-safe
+  analytics instrumentation.
+- A durable editorial workflow, audit trail, private editorial queries, and
+  protected review screens.
+- Source Submission intake, durable preparation outcomes, and a retrying
+  worker foundation.
+- Production/private-runtime composition, checked-in Postgres migrations, and
+  a private-server container package.
+
+The next operational step is configuring the private Postgres instance, Google
+OAuth credentials, and an approved retrieval/AI provider for workers. Until an
+AI provider is configured, workers remain provider-neutral and cannot invent a
+production proposal source.
 
 ## Run locally
 
-Requires Node 22 or newer and pnpm 10.
+Requires Node 22+ and pnpm 10.
 
 ```sh
 pnpm install
-pnpm dev
-```
-
-For local reader work, copy the explicit fixture setting from `.env.example`:
-
-```sh
 PUBLIC_CATALOGUE_RUNTIME_MODE=local-development pnpm dev
 ```
 
 Open `http://localhost:3000/topics/how-singapores-government-works`.
 
-Deployed reader rendering fails closed unless these server-only values are
-configured: `PUBLIC_CATALOGUE_SLUGS`, `PRIVATE_API_BASE_URL`, and
-`PRIVATE_API_SERVICE_CREDENTIAL`. Do not prefix them with `NEXT_PUBLIC_`.
-
-To run the private API locally, follow [its runbook](docs/runtime/private-api.md).
+Local-development mode intentionally uses the checked-in civic fixture. In
+production, the web app requires `PUBLIC_CATALOGUE_SLUGS`,
+`PRIVATE_API_BASE_URL`, and `PRIVATE_API_SERVICE_CREDENTIAL`; these are
+server-only values and must never use a `NEXT_PUBLIC_` prefix. See
+[`.env.example`](.env.example) for the full environment contract.
 
 ## Verify changes
 
 ```sh
 pnpm test
 pnpm typecheck
+pnpm lint
+pnpm db:check
 pnpm build
 ```
 
-Tests verify behaviour through public module/application interfaces. External provider adapters will be faked in automated tests; no live AI, news, or analytics provider is used by the test suite.
+An opt-in real-Postgres repository check is also available after provisioning
+a dedicated test database. It uses `TEST_DATABASE_URL` only and never falls
+back to `DATABASE_URL`; see the [persistence runbook](docs/runtime/persistence.md#opt-in-postgres-integration-verification).
 
-An opt-in real-Postgres repository check is available only after a dedicated
-test database has been provisioned. It requires `TEST_DATABASE_URL` (never
-falls back to `DATABASE_URL`), applies checked-in migrations, and leaves its
-test records intact. See the [Postgres persistence runbook](docs/runtime/persistence.md#opt-in-postgres-integration-verification).
+## Where to learn more
+
+| Need | Start here |
+| --- | --- |
+| Product purpose, scope, and success criteria | [Product foundation PRD](docs/prd/0001-product-foundation.md) |
+| All approved product decisions | [PRD index](docs/prd/README.md) and [ADRs](docs/adr/) |
+| Voice, reader experience, and editor design | [Briefing experience](docs/design/briefing-experience.md) and [editor workspace v1](docs/design/editor-workspace-v1.md) |
+| Editorial states and approval rules | [Editorial workflow PRD](docs/prd/0003-editorial-workflow.md) |
+| How source material becomes a reviewable proposal | [Source-processing PRD](docs/prd/0004-source-submission-and-agent-processing.md) |
+| Private API, persistence, authentication, and deployment | [Runtime documentation](docs/runtime/) |
+| Domain language | [CONTEXT.md](CONTEXT.md) |
+| Agent workflow, team ownership, and project conventions | [AGENTS.md](AGENTS.md), [team charters](docs/teams/), and [development workflow](docs/agents/development-workflow.md) |
 
 ## How work moves through the project
 
-1. Start with a PRD and linked GitHub issue.
-2. Read `CONTEXT.md`, relevant ADRs, and the owning team charter.
-3. Write a failing behaviour test, then implement the smallest vertical slice.
-4. Run the required checks and document user-visible changes.
-5. The engineering lead may merge reviewed work to `main`; the project owner controls deployment and the editor controls publication.
+1. Start with the relevant PRD, issue, domain language, and team charter.
+2. Add a behaviour test before changing product behaviour.
+3. Keep framework, HTTP, persistence, and domain responsibilities separate.
+4. Run the verification commands above and update the relevant documentation.
+5. The engineering lead may merge reviewed code; the project owner controls
+   deployment and the editor controls publication.
 
-For Next.js-specific work, agents consult `node_modules/next/dist/docs/` first.
+For Next.js work, agents must consult `node_modules/next/dist/docs/` first.
