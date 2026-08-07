@@ -69,6 +69,27 @@ Topic taxonomy, or publish content. Unknown or incomplete fields receive a
 `400` response using the stable `invalid_request` error envelope. A caller can
 retry the same idempotency key without triggering a second preparation.
 
+## Local development source preparation
+
+`src/modules/preparation/local-development-adapters.ts` provides an explicit
+development/test composition for this command boundary. It is useful when
+exercising a supplied transcript without Postgres, a worker, network retrieval,
+or an external AI provider.
+
+- Register each transcript fixture explicitly by its original identifier.
+- It retrieves only those `transcript` fixtures and produces a deterministic
+  SHA-256 content fingerprint. URL and document submissions deliberately fail
+  retrieval in this mode; nothing is fetched from the network.
+- Its in-memory store handles idempotency and exact duplicate material during a
+  single process lifetime only.
+- Its `local-development-placeholder` returns a zero-confidence, review-only
+  proposal and records that no external AI was called. It cannot generate a
+  production draft, accept Sources, alter taxonomy, or publish.
+
+This adapter is not automatically composed by `api:start`, and must never be
+used as production provider wiring. The production private runtime still needs
+reviewed retrieval, provider, persistence, queue, and operational adapters.
+
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.
 
