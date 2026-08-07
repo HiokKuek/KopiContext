@@ -1,0 +1,64 @@
+# Private-server runtime only. No `ports:` are published. An authenticated
+# tunnel/reverse proxy may later join `private_api` explicitly.
+name: kopicontext-private
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:?set in private env file}"
+      POSTGRES_USER: "${POSTGRES_USER:?set in private env file}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set in private env file}"
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    networks: [private_data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  migrate:
+    build: { context: ., dockerfile: Dockerfile.private-api }
+    image: kopi-context-private-api:local
+    command: ["pnpm", "db:migrate"]
+    restart: "no"
+    environment:
+      # Dedicated DDL role; this must not be the API's DML role.
+      DATABASE_URL: "${MIGRATION_DATABASE_URL:?set in private env file}"
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [private_data]
+
+  api:
+    build: { context: ., dockerfile: Dockerfile.private-api }
+    image: kopi-context-private-api:local
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PRIVATE_API_RUNTIME_MODE: production
+      # Inside the container only; compose still publishes no host port.
+      PRIVATE_API_HOST: 0.0.0.0
+      PRIVATE_API_PORT: "3001"
+      DATABASE_URL: "${DATABASE_URL:?set in private env file}"
+      PRIVATE_API_SERVICE_CREDENTIAL: "${PRIVATE_API_SERVICE_CREDENTIAL:?set in private env file}"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    networks: [private_api, private_data]
+    expose: ["3001"]
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/v1/healthz',{headers:{Authorization:'Bearer '+process.env.PRIVATE_API_SERVICE_CREDENTIAL}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  postgres-data:
+
+networks:
+  private_api:
+  # Postgres has no route to a tunnel/proxy or host-published service.
+  private_data:
+    internal: true

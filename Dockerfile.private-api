@@ -1,0 +1,20 @@
+# The API executes TypeScript with runtime dependency `tsx`; no test or web
+# build output is copied into this production image.
+FROM node:22-alpine
+
+ENV NODE_ENV=production PNPM_HOME=/pnpm PATH=/pnpm:$PATH
+WORKDIR /app
+RUN corepack enable
+
+# Production-only, lockfile-pinned dependencies form a stable cache boundary.
+COPY --chown=node:node package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node drizzle ./drizzle
+COPY --chown=node:node src ./src
+
+USER node
+EXPOSE 3001
+
+# Compose uses this same image for its one-off `pnpm db:migrate` job.
+CMD ["pnpm", "api:start"]

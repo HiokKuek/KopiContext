@@ -15,6 +15,7 @@ KopiContext helps English-speaking Singaporeans gain enough accurate, source-bac
 - [Editor workspace v1 design](docs/design/editor-workspace-v1.md)
 - [Postgres persistence baseline](docs/runtime/persistence.md)
 - [Private application API baseline](docs/runtime/private-api.md)
+- [Private-server container deployment](docs/runtime/private-server-deployment.md)
 - [Browser analytics boundary](docs/runtime/analytics.md)
 - [Anonymous Topic-request handoff](docs/runtime/topic-requests.md)
 - [Single-editor authentication foundation](docs/runtime/editor-auth.md)

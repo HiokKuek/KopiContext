@@ -11,6 +11,9 @@ production uses the real Postgres catalogue and Editorial Workflow adapters;
 the local reader fixture is available only through a separately selected local
 development mode.
 
+For container topology, migration startup ordering, private ingress, and the
+Vercel environment handoff, see the [private-server deployment package](private-server-deployment.md).
+
 ## Start locally
 
 `PRIVATE_API_SERVICE_CREDENTIAL` is always required. The runtime defaults to
