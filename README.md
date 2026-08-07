@@ -62,6 +62,11 @@ pnpm build
 
 Tests verify behaviour through public module/application interfaces. External provider adapters will be faked in automated tests; no live AI, news, or analytics provider is used by the test suite.
 
+An opt-in real-Postgres repository check is available only after a dedicated
+test database has been provisioned. It requires `TEST_DATABASE_URL` (never
+falls back to `DATABASE_URL`), applies checked-in migrations, and leaves its
+test records intact. See the [Postgres persistence runbook](docs/runtime/persistence.md#opt-in-postgres-integration-verification).
+
 ## How work moves through the project
 
 1. Start with a PRD and linked GitHub issue.

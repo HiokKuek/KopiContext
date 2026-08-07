@@ -57,3 +57,33 @@ Vercel web runtime.
 Unit tests must continue to use in-memory fakes and never require
 `DATABASE_URL`. Persistence integration tests will use a disposable Postgres
 database after the owning module introduces a repository adapter.
+
+## Opt-in Postgres integration verification
+
+The normal `pnpm test` suite deliberately excludes Postgres integration tests
+and does not read either database URL. To verify a Drizzle repository against a
+real database, provision a separate database whose name ends in `_test`,
+`-test`, `_tests`, or `-tests`, and give it a dedicated, least-privileged test
+role. Do not point this at a development, staging, or production database.
+
+```sh
+TEST_DATABASE_URL='postgres://TEST_ROLE:PASSWORD@HOST:5432/kopi_context_test' pnpm test:postgres
+```
+
+The test command applies the checked-in `drizzle/` migrations through Drizzle's
+migration ledger, then publishes a uniquely named, source-backed test Briefing
+through the real Drizzle editorial repository and reads it through the public
+catalogue repository. It never falls back to `DATABASE_URL`, rejects a target
+whose database name is not clearly a test database, and rejects a
+`TEST_DATABASE_URL` that identifies the same host/port/database as
+`DATABASE_URL` when both are present.
+
+The harness never creates, drops, truncates, or resets a database. Its fixture
+records remain in the dedicated test database, which makes the command safe to
+run against a shared test environment but means a database administrator must
+provision and retire that isolated database outside this repository. To only
+apply checked-in migrations after that provisioning step, run:
+
+```sh
+TEST_DATABASE_URL='postgres://TEST_ROLE:PASSWORD@HOST:5432/kopi_context_test' pnpm db:test:migrate
+```
