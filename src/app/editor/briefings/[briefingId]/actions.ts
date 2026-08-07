@@ -13,14 +13,95 @@ import { createHumanRevision, type HumanRevisionSubmission } from "@/platform/we
 import type { TemplateV1RevisionContent } from "@/modules/editorial/create-human-revision-command";
 import { acceptEditorialSource } from "@/platform/web/editorial-source-bff";
 import type { EditorialSource } from "@/modules/evidence/accept-editorial-source-command";
+import {
+  createEditorialClaim,
+  type EditorialClaimSubmission,
+} from "@/platform/web/editorial-claim-bff";
 
 export type EditorialTransitionActionState =
   | Readonly<{ kind: "idle"; message: "" }>
   | EditorialTransitionSubmission;
 export type HumanRevisionActionState = Readonly<{ kind: "idle"; message: "" }> | HumanRevisionSubmission;
-export type EditorialSourceActionState = Readonly<{kind:"idle"|"invalid"|"rejected"|"unavailable";message:string}>;
-export async function acceptEditorialSourceAction(briefingId:string,_:EditorialSourceActionState,form:FormData):Promise<EditorialSourceActionState>{const editor=await requireEditorForAction();if(form.get("confirm")!=="accept")return{kind:"invalid",message:"Confirm that you reviewed this Source."};const source=sourceOf(form);if(!source)return{kind:"invalid",message:"Complete all Source metadata."};const result=await acceptEditorialSource(editor,source);if(result.kind==="success"){revalidatePath(`/editor/briefings/${briefingId}`);return{kind:"idle",message:"Source accepted."}}return result;}
-function sourceOf(f:FormData):EditorialSource|undefined{const get=(n:string)=>text(f.get(n));const title=get("title"),publisher=get("publisher"),sourceType=get("sourceType"),canonicalUrl=get("canonicalUrl"),retrievedAt=get("retrievedAt"),relation=get("relation"),rightsNote=get("rightsNote");return title&&publisher&&sourceType&&canonicalUrl&&retrievedAt&&relation&&rightsNote?{title,publisher,sourceType,canonicalUrl,retrievedAt:new Date(retrievedAt).toISOString(),relation,rightsNote}:undefined}
+export type EditorialSourceActionState =
+  | Readonly<{ kind: "idle" | "invalid" | "rejected" | "unavailable"; message: string }>
+  | Readonly<{ kind: "success"; message: string; acceptedSourceId: string }>;
+export type EditorialClaimActionState = Readonly<{ kind: "idle"; message: "" }> | EditorialClaimSubmission;
+
+export async function acceptEditorialSourceAction(
+  briefingId: string,
+  _previous: EditorialSourceActionState,
+  form: FormData,
+): Promise<EditorialSourceActionState> {
+  const editor = await requireEditorForAction();
+  if (form.get("confirm") !== "accept") {
+    return { kind: "invalid", message: "Confirm that you reviewed this Source." };
+  }
+
+  const source = sourceOf(form);
+  if (!source) return { kind: "invalid", message: "Complete all Source metadata." };
+
+  const result = await acceptEditorialSource(editor, source);
+  if (result.kind !== "success") return result;
+
+  revalidatePath(`/editor/briefings/${briefingId}`);
+  return {
+    kind: "success",
+    message: "Source accepted. Add a supported Claim below.",
+    acceptedSourceId: result.acceptedSourceId,
+  };
+}
+
+export async function createEditorialClaimAction(
+  briefingId: string,
+  briefingRevisionId: string,
+  acceptedSourceId: string,
+  _previous: EditorialClaimActionState,
+  form: FormData,
+): Promise<EditorialClaimActionState> {
+  const editor = await requireEditorForAction();
+  if (form.get("confirm-claim") !== "create") {
+    return { kind: "invalid", message: "Confirm that you checked this statement against the Source." };
+  }
+
+  const statement = text(form.get("statement"));
+  const excerpt = text(form.get("excerpt"));
+  const rationale = text(form.get("rationale"));
+  if (!statement || !excerpt || !rationale) {
+    return { kind: "invalid", message: "Add a statement, its exact supporting excerpt, and a rationale." };
+  }
+
+  const result = await createEditorialClaim(editor, {
+    briefingId,
+    briefingRevisionId,
+    acceptedSourceId,
+    claim: { statement, excerpt, rationale },
+  });
+  if (result.kind === "success") {
+    revalidatePath(`/editor/briefings/${briefingId}`);
+    revalidatePath("/editor");
+  }
+  return result;
+}
+
+function sourceOf(form: FormData): EditorialSource | undefined {
+  const get = (name: string) => text(form.get(name));
+  const title = get("title");
+  const publisher = get("publisher");
+  const sourceType = get("sourceType");
+  const canonicalUrl = get("canonicalUrl");
+  const retrievedAt = toIso(get("retrievedAt"));
+  const relation = get("relation");
+  const rightsNote = get("rightsNote");
+  if (!title || !publisher || !sourceType || !canonicalUrl || !retrievedAt || !relation || !rightsNote) return undefined;
+
+  return { title, publisher, sourceType, canonicalUrl, retrievedAt, relation, rightsNote };
+}
+
+function toIso(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
 
 /**
  * Same-origin Server Action for the review decision panel. It authenticates on

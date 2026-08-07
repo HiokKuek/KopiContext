@@ -26,6 +26,8 @@ import { createEditorialDraftCommand } from "@/modules/editorial/create-editoria
 import { DrizzleCreateEditorialDraftRepository } from "@/platform/persistence/create-editorial-draft-repository";
 import { createAcceptEditorialSourceCommand } from "@/modules/evidence/accept-editorial-source-command";
 import { DrizzleAcceptEditorialSourceRepository } from "@/platform/persistence/accept-editorial-source-repository";
+import { createEditorialClaimCommand } from "@/modules/evidence/create-editorial-claim-command";
+import { DrizzleCreateEditorialClaimRepository } from "@/platform/persistence/create-editorial-claim-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -94,6 +96,7 @@ export function composePrivateApiRuntime(
     humanRevisions: createHumanRevisionCommand(new DrizzleHumanRevisionRepository(persistence.db)),
     editorialDrafts: createEditorialDraftCommand(new DrizzleCreateEditorialDraftRepository(persistence.db)),
     editorialSources: createAcceptEditorialSourceCommand(new DrizzleAcceptEditorialSourceRepository(persistence.db)),
+    editorialClaims: createEditorialClaimCommand(new DrizzleCreateEditorialClaimRepository(persistence.db)),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),

@@ -437,6 +437,40 @@ export const claimSupports = pgTable(
 );
 
 /**
+ * Append-only receipts for editor-authored Claims. A receipt is separate from
+ * the Claim itself so a retried browser submission cannot duplicate evidence.
+ */
+export const editorialClaimCreationRecords = pgTable(
+  "editorial_claim_creation_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    briefingId: uuid("briefing_id")
+      .notNull()
+      .references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingRevisionId: uuid("briefing_revision_id")
+      .notNull()
+      .references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    acceptedSourceId: uuid("accepted_source_id")
+      .notNull()
+      .references(() => acceptedSources.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    claimId: uuid("claim_id")
+      .notNull()
+      .references(() => claims.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    claimSupportId: uuid("claim_support_id")
+      .notNull()
+      .references(() => claimSupports.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    actorId: text("actor_id").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    index("editorial_claim_creation_records_briefing_occurred_idx").on(table.briefingId, table.occurredAt),
+    check("editorial_claim_creation_records_actor_not_empty", sql`length(${table.actorId}) > 0`),
+  ],
+);
+
+/**
  * An append-only editorial record. The application writes it in the same
  * transaction as a successful Briefing status transition.
  */
