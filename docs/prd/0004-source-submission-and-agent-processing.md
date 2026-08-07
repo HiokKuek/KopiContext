@@ -8,7 +8,7 @@ The editor needs agents to turn rights-cleared source material into reviewable p
 
 ## Solution
 
-Expose one deep application interface: prepare a Source Submission for editorial review. It owns normalisation, duplicate detection, Topic/Subtopic proposals, candidate Claims, structured draft creation, provenance, retries, and escalation.
+Expose one deep application interface: prepare material for editorial review. It owns normalisation, duplicate detection, Topic/Subtopic proposals, candidate Claims, structured draft creation, provenance, retries, and escalation. A single orchestrator is the only entry point to specialised agent skills, so their output remains one traceable review packet rather than a collection of independent agent actions.
 
 ## User Stories
 
@@ -27,11 +27,15 @@ Expose one deep application interface: prepare a Source Submission for editorial
 - Agents may propose classification, Claims, and drafts but may not accept a Source, change the canonical taxonomy, publish, merge, or deploy.
 - Hosted AI receives only public or rights-cleared material. Store provider, model, prompt version, input provenance, output, confidence, and rationale for review.
 - The preparation interface uses adapters for source retrieval, AI, clock, scheduling, and persistence; external variation stays behind those seams.
+- The orchestrator may invoke bounded specialist skills for source gathering, source-quality assessment, Topic/Subtopic classification, Claim extraction, drafting, and final consistency checks. Each skill receives only the prior approved-in-workflow artefacts it needs and returns a typed, attributable result. A skill cannot directly write accepted evidence, alter taxonomy, or publish.
+- Preparation can be triggered by a new Source Submission and by a scheduler. The scheduler enqueues idempotent work; it never performs work inline. Its cadence is an operations setting (initially daily or weekly after the editor chooses the cost/freshness trade-off), with per-run budget, timeout, retry, and concurrency limits.
+- Scheduled runs select from an editor-visible queue using explicit reasons such as a new submission, a missing baseline Topic, stale published material, or a Topic request. They do not browse indiscriminately or silently expand the product's scope.
 
 ## Testing Decisions
 
 - Test preparation through its application interface using fake retrieval and AI adapters.
 - Assert idempotency, deduplication, provenance retention, confidence-based escalation, and no automatic Source acceptance or publication.
+- Assert that scheduled execution only enqueues eligible work, respects run budgets and idempotency, records an attributable skill-by-skill outcome, and leaves failures visible to the editor/operator.
 - Test a transcript submission through browser/editor coverage only at the editor-visible outcome.
 
 ## Out of Scope

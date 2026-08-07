@@ -19,7 +19,7 @@ Reader finds a Topic
 
 Editor signs in
   → submits a source, URL, document, or transcript
-  → reviews agent-prepared suggestions and evidence
+  → accepts supporting Sources and reviews agent-prepared suggestions and evidence
   → explicitly approves and publishes a Briefing
 ```
 
@@ -47,6 +47,8 @@ taxonomy, or publish. A human editor is always the approval gate.
   may prepare proposals, but no worker can publish automatically. The editor
   can inspect provenance and proposed placement, Claims, and draft as clearly
   unaccepted suggestions.
+- A direct editorial starting point: the editor can create a Draft Briefing
+  and accept a rights-cleared Source without waiting for agent preparation.
 
 ## Architecture at a glance
 
@@ -71,10 +73,12 @@ private API and Postgres are not published through a public container port.
 
 ## Current scope
 
-The project already includes:
+The codebase already includes:
 
-- The public civic Briefing, search, no-result Topic requests, and privacy-safe
-  analytics instrumentation.
+- A locally demonstrated civic Briefing template, public search, no-result
+  Topic requests, and privacy-safe analytics instrumentation. The controlled
+  launch still requires editor-approved, production-published Briefings for
+  every launch Topic.
 - A durable editorial workflow, audit trail, private editorial queries, and
   protected review screens.
 - Source Submission intake, durable preparation outcomes, and a retrying

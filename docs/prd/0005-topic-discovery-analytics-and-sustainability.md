@@ -20,11 +20,13 @@ Use first-party anonymous analytics, Topic requests, failed searches, source opp
 6. As a product owner, I want pseudonymous event data for reading and discovery behaviour, so that I can improve usefulness without profiling people.
 7. As a product owner, I want no raw-IP retention and a privacy notice, so that anonymous analytics has a clear limit.
 8. As an operator, I want Topic priorities to feed the editorial queue rather than automatically publish content, so that demand remains subject to judgement.
+9. As a reader without a search term, I want a few understandable starting points and relevant next reads, so that discovery feels useful rather than like an empty search task.
 
 ## Implementation Decisions
 
 - Record rotating pseudonymous sessions and the approved first-party events: page view, search, result click, no-result search, Topic view, section expansion, Current Update open, related Topic click, share, Topic request, and feedback.
 - Topic priority combines popularity, conversation value, freshness, and editorial judgement; its explanation is visible in the editorial workspace.
+- Reader-facing discovery uses a deliberately small set of labelled entry paths rather than an undifferentiated list of Topics. Each path explains why it is a good place to begin; Related Topics and conversation questions create onward paths after a Briefing. These are editorial recommendations, not behavioural personalisation.
 - The launch catalogue is editable and seeds discovery rather than freezing the taxonomy.
 - The controlled-launch catalogue is complete only when every agreed launch Topic has one deliberately Published baseline Briefing. Each baseline must satisfy Briefing Template v1, have its Claims supported by editor-accepted Sources, display freshness information, and have an Editorial Approval audit record. Drafts, Source Submissions, local fixtures, and agent proposals are useful preparation but are not launch-completion evidence. The product team maintains the topic-by-topic evidence in the [launch content inventory](../product/launch-content-inventory.md).
 
