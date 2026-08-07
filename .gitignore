@@ -15,4 +15,6 @@ playwright-report/
 
 # Deployment and local environment configuration
 .vercel/
-.env*.local
+.env
+.env.*
+!.env.example

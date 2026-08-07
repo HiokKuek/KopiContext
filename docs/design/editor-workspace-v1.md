@@ -17,10 +17,14 @@ The first journey focuses on the civic Briefing. It must work with a keyboard,
 on a narrow screen, and without direct browser access to the private API or
 database. The existing public reader page remains anonymous and unchanged.
 
-## Required authentication decision
+## Authentication decision
 
-An authentication provider has deliberately **not** been selected. Before
-implementation, the product owner must choose one that can meet this contract:
+v1 uses the stable Auth.js (`next-auth`) Google OAuth adapter with one
+server-configured allowed email. The selected account is
+`ernest.tanhk@gmail.com` in deployment configuration; it is never hard-coded
+in source. The provider-neutral `requireEditorSession()` and `EditorIdentity`
+boundary applies this decision to all future workspace routes. The remaining
+contract is:
 
 - The editor reaches `/editor` only through a server-verified authenticated
   session. There is one configured editor identity in v1; multi-editor roles
