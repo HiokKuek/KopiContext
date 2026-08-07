@@ -31,6 +31,8 @@ taxonomy, or publish. A human editor is always the approval gate.
 
 - Mobile-friendly, plain-English Briefings with a useful mental model before
   the detail.
+- A guided homepage that offers one clear first read, honest links to other
+  published Briefings, and a route to request what is still missing.
 - Clear Sources and a review date, so readers can judge where an explanation
   came from.
 - Anonymous search, Topic requests, and minimal first-party analytics. The
