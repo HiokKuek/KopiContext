@@ -50,7 +50,7 @@ export const sourcePreparationResultState = pgEnum("source_preparation_result_st
 export const briefingRevisionOrigin = pgEnum("briefing_revision_origin", ["human", "agent"]);
 export const claimStatus = pgEnum("claim_status", ["candidate", "verified", "rejected"]);
 export const claimSupportKind = pgEnum("claim_support_kind", ["direct", "contextual"]);
-export const proposalDecisionPart = pgEnum("proposal_decision_part", ["classification-and-draft", "source"]);
+export const proposalDecisionPart = pgEnum("proposal_decision_part", ["classification-and-draft", "source", "candidate-claim"]);
 export const proposalDecisionOutcome = pgEnum("proposal_decision_outcome", ["accepted"]);
 export const anonymousAnalyticsEventType = pgEnum("anonymous_analytics_event_type", [
   "page-view",
@@ -436,6 +436,8 @@ export const proposalDecisionRecords = pgTable(
     briefingId: uuid("briefing_id").references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
     briefingRevisionId: uuid("briefing_revision_id").references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
     acceptedSourceId: uuid("accepted_source_id").references(() => acceptedSources.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    claimId: uuid("claim_id").references(() => claims.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    claimSupportId: uuid("claim_support_id").references(() => claimSupports.id, { onDelete: "restrict", onUpdate: "cascade" }),
     metadata: jsonb("metadata").default({}).notNull(),
   },
   (table) => [
@@ -445,6 +447,7 @@ export const proposalDecisionRecords = pgTable(
       "proposal_decision_records_phase_a_results",
       sql`(${table.proposalPart} <> 'classification-and-draft' OR (${table.topicId} IS NOT NULL AND ${table.briefingId} IS NOT NULL AND ${table.briefingRevisionId} IS NOT NULL AND ${table.acceptedSourceId} IS NULL))`,
     ),
+    check("proposal_decision_records_candidate_claim_results", sql`(${table.proposalPart} <> 'candidate-claim' OR (${table.briefingRevisionId} IS NOT NULL AND ${table.acceptedSourceId} IS NOT NULL AND ${table.claimId} IS NOT NULL AND ${table.claimSupportId} IS NOT NULL AND ${table.topicId} IS NULL AND ${table.briefingId} IS NULL))`),
     check(
       "proposal_decision_records_source_results",
       sql`(${table.proposalPart} <> 'source' OR (${table.acceptedSourceId} IS NOT NULL AND ${table.topicId} IS NULL AND ${table.briefingId} IS NULL AND ${table.briefingRevisionId} IS NULL))`,
