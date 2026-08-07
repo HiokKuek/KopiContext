@@ -27,12 +27,15 @@ The reader page separates evergreen Briefing material from Current Updates, show
 
 ## Architecture
 
-KopiContext is a TypeScript modular monolith. The public web layer runs on Vercel; the private runtime owns the application API, Postgres, workers, and queues. The application API is the primary integration and test seam. Its Fastify baseline exposes an authenticated `GET /v1/healthz`; see [the private API runbook](docs/runtime/private-api.md), [architecture roadmap](docs/architecture/implementation-roadmap.md), and [ADRs](docs/adr/).
+KopiContext is a TypeScript modular monolith. The public web layer runs on Vercel; the private runtime owns the application API, Postgres, workers, and queues. The application API is the primary integration and test seam. Its Fastify boundary has a health check plus authenticated command contracts for source submission and editorial transitions; see [the private API runbook](docs/runtime/private-api.md), [architecture roadmap](docs/architecture/implementation-roadmap.md), and [ADRs](docs/adr/).
 
 Current code is deliberately small:
 
 - `src/modules/content/` owns the typed published Briefing fixture and public retrieval interface.
+- `src/modules/editorial/` owns state-transition rules, audit records, repositories, and the transport-neutral editorial command.
+- `src/modules/preparation/` owns the idempotent, provenance-preserving source-preparation interface. It can propose placement, candidate claims, and a draft, but cannot accept evidence or publish.
 - `src/app/` owns Next.js routes and presentation only; it consumes the content interface rather than embedding Briefing data.
+- `src/platform/api/` owns Fastify authentication and HTTP contracts. Its real Postgres repository and background-worker composition are the next operational step, so the command routes are tested ports rather than a provisioned editor backend.
 
 ## Run locally
 
