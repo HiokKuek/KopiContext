@@ -436,6 +436,49 @@ export const claimSupports = pgTable(
   ],
 );
 
+/** A dated supplement to a Topic's evergreen Briefing. */
+export const currentUpdates = pgTable(
+  "current_updates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    topicId: uuid("topic_id").notNull().references(() => topics.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingId: uuid("briefing_id").references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    status: editorialStatus("status").default("draft").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    effectiveAt: timestamp("effective_at", { withTimezone: true, mode: "date" }).notNull(),
+    approvedBy: text("approved_by"),
+    approvedAt: timestamp("approved_at", { withTimezone: true, mode: "date" }),
+    publishedAt: timestamp("published_at", { withTimezone: true, mode: "date" }),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [
+    index("current_updates_topic_effective_idx").on(table.topicId, table.effectiveAt),
+    index("current_updates_status_effective_idx").on(table.status, table.effectiveAt),
+    check("current_updates_approval_pair", sql`(${table.approvedBy} IS NULL) = (${table.approvedAt} IS NULL)`),
+    check("current_updates_published_requires_approval", sql`(${table.status} <> 'published' OR (${table.approvedBy} IS NOT NULL AND ${table.publishedAt} IS NOT NULL))`),
+  ],
+);
+
+/** The Accepted Sources that support one dated Current Update. */
+export const currentUpdateSupports = pgTable(
+  "current_update_supports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    currentUpdateId: uuid("current_update_id").notNull().references(() => currentUpdates.id, { onDelete: "cascade", onUpdate: "cascade" }),
+    acceptedSourceId: uuid("accepted_source_id").notNull().references(() => acceptedSources.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    excerpt: text("excerpt"),
+    rationale: text("rationale"),
+    addedBy: text("added_by").notNull(),
+    addedAt: timestamp("added_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    unique("current_update_supports_update_source_unique").on(table.currentUpdateId, table.acceptedSourceId),
+    index("current_update_supports_source_idx").on(table.acceptedSourceId),
+  ],
+);
+
 /**
  * Append-only receipts for editor-authored Claims. A receipt is separate from
  * the Claim itself so a retried browser submission cannot duplicate evidence.
