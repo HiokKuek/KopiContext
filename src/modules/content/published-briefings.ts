@@ -8,48 +8,71 @@ export type BriefingSource = {
   url: string;
 };
 
-/** A source-backed, visual-first explanation for civic Briefings. */
-export type GovernmentBranch = {
-  id: "legislature" | "executive" | "judiciary";
-  name: string;
-  plainLanguagePurpose: string;
-  institutions: ReadonlyArray<string>;
-  relationshipNote?: string;
-  everydayExample: string;
-  learnMoreLabel: string;
+type SourceBacked = {
   sourceIds: ReadonlyArray<string>;
 };
 
-export type GovernmentOfficeComparison = {
-  title: string;
-  question: string;
-  answer: string;
-  roles: ReadonlyArray<{
-    role: "President" | "Prime Minister" | "Cabinet";
-    purpose: string;
-    sourceIds: ReadonlyArray<string>;
-  }>;
-};
-
-export type PolicyFlowStep = {
-  title: string;
-  explanation: string;
-  sourceIds: ReadonlyArray<string>;
-};
-
-export type CivicGovernmentModel = {
+/** A source-backed visual explainer that can be used by any Briefing Topic. */
+export type ConceptMapExplainer = SourceBacked & {
+  kind: "concept-map";
+  id: string;
   title: string;
   introduction: string;
-  branches: ReadonlyArray<GovernmentBranch>;
-  officeComparison: GovernmentOfficeComparison;
-  policyFlow: {
-    title: string;
-    introduction: string;
-    exampleTitle: string;
-    exampleSummary: string;
-    steps: ReadonlyArray<PolicyFlowStep>;
-  };
+  centralLabel: string;
+  nodes: ReadonlyArray<
+    SourceBacked & {
+      id: string;
+      label: string;
+      summary: string;
+      details: ReadonlyArray<string>;
+      note?: string;
+      example?: string;
+      learnMoreLabel?: string;
+    }
+  >;
 };
+
+export type ComparisonExplainer = SourceBacked & {
+  kind: "comparison";
+  id: string;
+  title: string;
+  introduction?: string;
+  question?: string;
+  answer?: string;
+  columns: { label: string; valueLabel: string };
+  rows: ReadonlyArray<
+    SourceBacked & {
+      label: string;
+      value: string;
+    }
+  >;
+};
+
+export type ProcessFlowExplainer = SourceBacked & {
+  kind: "process-flow";
+  id: string;
+  title: string;
+  introduction: string;
+  steps: ReadonlyArray<
+    SourceBacked & {
+      title: string;
+      explanation: string;
+    }
+  >;
+};
+
+export type ContextualCalloutExplainer = SourceBacked & {
+  kind: "contextual-callout";
+  id: string;
+  title: string;
+  body: string;
+};
+
+export type BriefingVisualExplainer =
+  | ConceptMapExplainer
+  | ComparisonExplainer
+  | ProcessFlowExplainer
+  | ContextualCalloutExplainer;
 
 export type PublishedBriefing = {
   slug: string;
@@ -60,8 +83,8 @@ export type PublishedBriefing = {
   thirtySecondOverview: string;
   fiveMinuteExplanation: string;
   whyPeopleCare: string;
-  /** Present when a civic Briefing needs a reusable orientation model. */
-  civicGovernmentModel?: CivicGovernmentModel;
+  /** Ordered explainers that establish the Topic's mental model before detail. */
+  visualExplainers?: ReadonlyArray<BriefingVisualExplainer>;
   keyTerms: ReadonlyArray<{ term: string; definition: string }>;
   entities: ReadonlyArray<string>;
   debates: ReadonlyArray<string>;
@@ -86,80 +109,90 @@ const briefings: readonly PublishedBriefing[] = [
       "The three organs have different jobs, but they connect. People elect MPs. Parliament considers Bills and passes laws. The Prime Minister chairs Cabinet, which gives the government its general direction; ministries and statutory boards then deliver policies and public services. The President is the head of state and has specific constitutional roles. The courts independently decide cases by applying the law. This is a useful map, not three sealed boxes: a proposed law can move from policy work to Cabinet, Parliament, presidential assent, implementation and, where a dispute reaches court, judicial interpretation.",
     whyPeopleCare:
       "Knowing which institution does what makes it easier to follow public policy, understand who is accountable, and ask more useful questions about issues that affect daily life.",
-    civicGovernmentModel: {
-      title: "The big picture",
-      introduction:
-        "Singapore's Constitution sets out three organs of state: the Legislature, the Executive and the Judiciary. Think of them as a map for understanding who makes laws, who directs and carries out government policy, and who applies the law in court.",
-      branches: [
+    visualExplainers: [
+      {
+        kind: "concept-map",
+        id: "government-branches",
+        title: "The big picture",
+        introduction:
+          "Singapore's Constitution sets out three organs of state: the Legislature, the Executive and the Judiciary. Think of them as a map for understanding who makes laws, who directs and carries out government policy, and who applies the law in court.",
+        centralLabel: "Singapore Government",
+        sourceIds: ["pmo-government", "constitution", "judiciary-legal-system"],
+        nodes: [
         {
           id: "legislature",
-          name: "Legislature",
-          plainLanguagePurpose:
+          label: "Legislature",
+          summary:
             "Makes laws. Parliament considers Bills, debates public issues and approves public spending.",
-          institutions: ["Parliament"],
-          relationshipNote:
+          details: ["Parliament"],
+          note:
             "The President is not a member of the three branches, but the President's authority is required at the final stage of passing legislation.",
-          everydayExample:
+          example:
             "If a policy needs a new law, Parliament considers and votes on the Bill before it can become law.",
           learnMoreLabel: "Learn how Parliament works",
           sourceIds: ["parliament-about", "constitution"],
         },
         {
           id: "executive",
-          name: "Executive",
-          plainLanguagePurpose:
+          label: "Executive",
+          summary:
             "Gives the government its direction and puts policy into action through the Cabinet, ministries and public agencies.",
-          institutions: ["Prime Minister", "Cabinet", "Ministries", "Statutory boards"],
-          everydayExample:
+          details: ["Prime Minister", "Cabinet", "Ministries", "Statutory boards"],
+          example:
             "A ministry can develop a policy proposal, while the Cabinet considers major government decisions.",
           learnMoreLabel: "Learn about the Executive",
           sourceIds: ["pmo-government", "constitution"],
         },
         {
           id: "judiciary",
-          name: "Judiciary",
-          plainLanguagePurpose:
+          label: "Judiciary",
+          summary:
             "Independently administers justice by interpreting and applying the law when courts decide cases.",
-          institutions: ["Courts"],
-          everydayExample:
+          details: ["Courts"],
+          example:
             "When a legal dispute reaches court, judges apply the relevant law to the facts of that case.",
           learnMoreLabel: "Learn how Singapore's courts work",
           sourceIds: ["judiciary-legal-system", "pmo-government"],
         },
-      ],
-      officeComparison: {
+        ],
+      },
+      {
+        kind: "comparison",
+        id: "government-roles",
         title: "President, Prime Minister and Cabinet",
         question: "Who runs Singapore day to day?",
         answer:
           "The Prime Minister chairs the Cabinet. The Cabinet is the central decision-making body of the executive government and gives the government its general direction.",
-        roles: [
+        columns: { label: "Role", valueLabel: "Main purpose" },
+        sourceIds: ["pmo-government", "constitution", "istana-presidency"],
+        rows: [
           {
-            role: "President",
-            purpose:
+            label: "President",
+            value:
               "Singapore's head of state, with constitutional roles and specific discretionary powers in defined areas.",
             sourceIds: ["istana-presidency", "pmo-government", "constitution"],
           },
           {
-            role: "Prime Minister",
-            purpose:
+            label: "Prime Minister",
+            value:
               "The effective head of the Executive who chairs the Cabinet and leads its general policy direction.",
             sourceIds: ["pmo-government", "constitution"],
           },
           {
-            role: "Cabinet",
-            purpose:
+            label: "Cabinet",
+            value:
               "The central decision-making body of the executive government, responsible for the government's general direction and accountable to Parliament.",
             sourceIds: ["pmo-government", "constitution"],
           },
         ],
       },
-      policyFlow: {
+      {
+        kind: "process-flow",
+        id: "government-policy-flow",
         title: "How the branches work together",
         introduction:
           "A public-housing example shows how the roles can connect. The exact route depends on the proposal; not every policy change needs a new law.",
-        exampleTitle: "Example: a public-housing policy change",
-        exampleSummary:
-          "A policy idea can be developed by the relevant ministry, considered by Cabinet, turned into a Bill when legislation is needed, implemented by public bodies, and interpreted by courts if a legal dispute arises.",
+        sourceIds: ["pmo-government", "parliament-about", "constitution", "judiciary-legal-system"],
         steps: [
           {
             title: "A ministry develops a proposal",
@@ -199,7 +232,15 @@ const briefings: readonly PublishedBriefing[] = [
           },
         ],
       },
-    },
+      {
+        kind: "contextual-callout",
+        id: "government-policy-example",
+        title: "Example: a public-housing policy change",
+        body:
+          "A policy idea can be developed by the relevant ministry, considered by Cabinet, turned into a Bill when legislation is needed, implemented by public bodies, and interpreted by courts if a legal dispute arises.",
+        sourceIds: ["pmo-government", "parliament-about", "constitution", "judiciary-legal-system"],
+      },
+    ],
     keyTerms: [
       {
         term: "Legislature",
