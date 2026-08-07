@@ -33,6 +33,15 @@ describe("private API runtime composition", () => {
     });
     expect(topicRequest.statusCode).toBe(400);
 
+    // The query exists in production composition, and the shared credential
+    // gate is applied before any substitute persistence object is touched.
+    const editorQueue = await runtime.app.inject({
+      method: "GET",
+      url: "/v1/editorial/work",
+      headers: { authorization: `Bearer ${serviceCredential}` },
+    });
+    expect(editorQueue.statusCode).toBe(500);
+
     await runtime.close();
     expect(close).toHaveBeenCalledOnce();
   });

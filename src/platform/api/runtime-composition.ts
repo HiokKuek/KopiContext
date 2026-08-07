@@ -7,6 +7,7 @@ import {
   DrizzleEditorialRepository,
   DrizzlePublishedCatalogueRepository,
 } from "@/platform/persistence/content-repositories";
+import { DrizzleEditorialReadRepository } from "@/platform/persistence/editorial-read-repository";
 import { DrizzleTopicRequestDemandRepository } from "@/platform/persistence/topic-request-repository";
 import {
   createPostgresPersistence,
@@ -63,6 +64,7 @@ export function composePrivateApiRuntime(
     serviceAuthenticator: authenticator,
     publicCatalogue: new DrizzlePublishedCatalogueRepository(persistence.db),
     editorialBriefingTransitions: createEditorialWorkflowCommand(editorialRepository),
+    editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
     topicRequests: createTopicRequestCommand(topicRequestDemands),
   });
 

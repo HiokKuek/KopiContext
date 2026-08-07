@@ -19,6 +19,8 @@ development mode.
 - `DrizzlePublishedCatalogueRepository` for public Published Briefings;
 - `DrizzleEditorialRepository` and the Editorial Workflow command for
   authenticated editorial transitions; and
+- `DrizzleEditorialReadRepository` for authenticated editor queue and Briefing
+  review queries; and
 - `DrizzleTopicRequestDemandRepository` and the aggregate-only Topic-request
   command for authenticated BFF handoffs; and
 - a Postgres pool that is closed alongside Fastify during shutdown.
@@ -78,6 +80,28 @@ consistently:
   }
 }
 ```
+
+## Editor read queries
+
+Production composition exposes two private, read-only contracts for the
+future server-rendered editor BFF. They are not browser endpoints and are
+absent in restricted local-development fixture mode:
+
+- `GET /v1/editorial/work` returns workflow-state counts and a prioritised,
+  summary-only queue. It intentionally contains no revision content, source
+  material, or agent output.
+- `GET /v1/editorial/briefings/:briefingId` returns the current immutable
+  revision, required Template-section states, Claim-to-Accepted-Source support,
+  safe Source Submission provenance, freshness, audit records, and
+  policy-derived allowed actions.
+
+Both require `Authorization: Bearer <PRIVATE_API_SERVICE_CREDENTIAL>`. A
+missing Briefing returns the ordinary `404 not_found` envelope; an invalid ID
+returns `400 invalid_request`. The HTTP adapter projects the review model
+explicitly: raw submitted text, retrieval fingerprints, processing history,
+AI prompts, and processor output never appear in either response. The future
+editor BFF must use the authenticated server-side session to decide whether to
+call these routes; it must never forward this credential to a browser.
 
 ## Source-submission command
 

@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from "fastify";
 
 import type { PublishedBriefing } from "@/modules/content/published-briefings";
+import type { EditorialReadRepository } from "@/modules/editorial/editorial-read-model";
 
 import {
   type PrivateServiceIdentity,
@@ -19,11 +20,13 @@ import {
   type AnonymousAnalyticsEventCommand,
 } from "./analytics-event-route";
 import { registerTopicRequestRoute, type TopicRequestCommand } from "./topic-request-route";
+import { registerEditorialReadRoutes } from "./editorial-read-routes";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
+  editorialReadModels?: EditorialReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
   anonymousAnalyticsEvents?: AnonymousAnalyticsEventCommand;
   topicRequests?: TopicRequestCommand;
@@ -126,6 +129,14 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
           "editorial_transition_rejected",
           "The requested editorial transition cannot be completed.",
         ),
+    });
+  }
+
+  if (dependencies.editorialReadModels) {
+    registerEditorialReadRoutes(app, {
+      editorialReadModels: dependencies.editorialReadModels,
+      invalidRequest: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The requested Briefing does not exist."),
     });
   }
 

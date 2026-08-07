@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildPrivateApi, type PublicCatalogueQuery } from "./app";
 import type { ServiceCredentialAuthenticator } from "./service-auth";
 import type { PublishedBriefing } from "@/modules/content/published-briefings";
+import type { EditorialReadRepository } from "@/modules/editorial/editorial-read-model";
 
 const acceptedAuthenticator: ServiceCredentialAuthenticator = {
   async authenticate(authorization) {
@@ -32,6 +33,94 @@ const publishedBriefing: PublishedBriefing = {
 const publicCatalogue: PublicCatalogueQuery = {
   findPublishedBriefingBySlug(slug) {
     return slug === publishedBriefing.slug ? publishedBriefing : undefined;
+  },
+};
+
+const editorialReadModels: EditorialReadRepository = {
+  async listEditorialWork() {
+    return {
+      countsByStatus: {
+        draft: 0,
+        "needs-verification": 1,
+        "in-editorial-review": 0,
+        approved: 0,
+        published: 0,
+        archived: 0,
+      },
+      items: [{
+        briefingId: "briefing-1",
+        title: "How Singapore's Government Works",
+        topicTitle: "Singapore Government",
+        status: "needs-verification",
+        revisionId: "revision-1",
+        revisionCreatedAt: "2026-08-01T00:00:00.000Z",
+        freshness: { lastActivityAt: "2026-08-02T00:00:00.000Z", reviewAgeDays: 5, isStale: false },
+        completeness: {
+          isComplete: false,
+          missingSectionCount: 1,
+          claimCount: 2,
+          unsupportedClaimCount: 1,
+          acceptedSourceCount: 1,
+        },
+      }],
+    };
+  },
+  async getEditorialBriefing(briefingId) {
+    if (briefingId !== "briefing-1") return undefined;
+    return {
+      briefing: {
+        id: "briefing-1",
+        title: "How Singapore's Government Works",
+        topic: { id: "topic-1", slug: "how-government-works", title: "Singapore Government" },
+        status: "needs-verification",
+      },
+      revision: {
+        id: "revision-1",
+        sequence: 1,
+        templateVersion: "v1",
+        content: { oneSentenceExplanation: "A source-backed explanation." },
+        origin: "agent",
+        createdBy: "preparation-worker",
+        createdAt: "2026-08-01T00:00:00.000Z",
+      },
+      templateSections: [{ key: "oneSentenceExplanation", label: "One-sentence explanation", state: "complete" }],
+      claims: [{
+        id: "claim-1",
+        statement: "The Government has three organs of state.",
+        status: "verified",
+        supports: [{
+          id: "support-1",
+          sourceId: "source-1",
+          kind: "direct",
+          addedBy: "editor-1",
+          addedAt: "2026-08-01T00:00:00.000Z",
+        }],
+      }],
+      acceptedSources: [{
+        id: "source-1",
+        title: "Constitution",
+        publisher: "Singapore Statutes Online",
+        sourceType: "legal",
+        canonicalUrl: "https://example.test/constitution",
+        retrievedAt: "2026-08-01T00:00:00.000Z",
+        relation: "Supports the claim.",
+        rightsNote: "Public legal material.",
+        acceptedBy: "editor-1",
+        acceptedAt: "2026-08-01T00:00:00.000Z",
+        submission: {
+          id: "submission-1",
+          kind: "transcript",
+          originalIdentifier: "Government video transcript",
+          submittedBy: "editor-1",
+          submittedAt: "2026-07-30T00:00:00.000Z",
+          rightsNote: "Submitted for review.",
+          processingStatus: "ready-for-review",
+        },
+      }],
+      freshness: { lastActivityAt: "2026-08-02T00:00:00.000Z", reviewAgeDays: 5, isStale: false },
+      auditRecords: [],
+      allowedActions: ["start-editorial-review"],
+    };
   },
 };
 
@@ -149,5 +238,86 @@ describe("private application API", () => {
 
     expect(response.statusCode).toBe(202);
     expect(record).toHaveBeenCalledOnce();
+  });
+
+  it("requires the private service credential for editor queue and review queries", async () => {
+    const app = buildPrivateApi({
+      serviceAuthenticator: acceptedAuthenticator,
+      publicCatalogue,
+      editorialReadModels,
+    });
+    apps.push(app);
+
+    const [queue, review] = await Promise.all([
+      app.inject({ method: "GET", url: "/v1/editorial/work" }),
+      app.inject({ method: "GET", url: "/v1/editorial/briefings/briefing-1" }),
+    ]);
+    expect(queue.statusCode).toBe(401);
+    expect(review.statusCode).toBe(401);
+  });
+
+  it("returns a minimised editorial queue and review aggregate only to the private service", async () => {
+    const app = buildPrivateApi({
+      serviceAuthenticator: acceptedAuthenticator,
+      publicCatalogue,
+      editorialReadModels: {
+        ...editorialReadModels,
+        async getEditorialBriefing(briefingId) {
+          const briefing = await editorialReadModels.getEditorialBriefing(briefingId);
+          return briefing && ({ ...briefing, processorOutput: { rawPrompt: "must not leave the private adapter" } } as never);
+        },
+      },
+    });
+    apps.push(app);
+
+    const queue = await app.inject({
+      method: "GET",
+      url: "/v1/editorial/work",
+      headers: { authorization: "Bearer test-credential" },
+    });
+    expect(queue.statusCode).toBe(200);
+    expect(queue.json()).toMatchObject({
+      countsByStatus: { "needs-verification": 1 },
+      items: [{ briefingId: "briefing-1", completeness: { unsupportedClaimCount: 1 } }],
+    });
+    expect(queue.json().items[0]).not.toHaveProperty("content");
+
+    const review = await app.inject({
+      method: "GET",
+      url: "/v1/editorial/briefings/briefing-1",
+      headers: { authorization: "Bearer test-credential" },
+    });
+    expect(review.statusCode).toBe(200);
+    expect(review.json()).toMatchObject({
+      briefing: { id: "briefing-1", status: "needs-verification" },
+      acceptedSources: [{ submission: { id: "submission-1", kind: "transcript" } }],
+      allowedActions: ["start-editorial-review"],
+    });
+    expect(JSON.stringify(review.json())).not.toContain("processorOutput");
+    expect(JSON.stringify(review.json())).not.toContain("rawPrompt");
+  });
+
+  it("uses the stable error envelope when an editor briefing is absent or malformed", async () => {
+    const app = buildPrivateApi({ serviceAuthenticator: acceptedAuthenticator, publicCatalogue, editorialReadModels });
+    apps.push(app);
+    const absent = await app.inject({
+      method: "GET",
+      url: "/v1/editorial/briefings/missing",
+      headers: { authorization: "Bearer test-credential" },
+    });
+    expect(absent.statusCode).toBe(404);
+    expect(absent.json()).toEqual({
+      error: { code: "not_found", message: "The requested Briefing does not exist." },
+    });
+
+    const malformed = await app.inject({
+      method: "GET",
+      url: "/v1/editorial/briefings/%20",
+      headers: { authorization: "Bearer test-credential" },
+    });
+    expect(malformed.statusCode).toBe(400);
+    expect(malformed.json()).toEqual({
+      error: { code: "invalid_request", message: "briefingId must be a non-empty string." },
+    });
   });
 });
