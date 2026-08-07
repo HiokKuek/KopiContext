@@ -8,6 +8,7 @@ import {
   mapEditorialRevision,
   mapPublishedBriefing,
 } from "./content-repositories";
+import { mapReviewEvidence } from "./editorial-read-repository";
 
 const templateContent = {
   oneSentenceExplanation: "A concise explanation.",
@@ -178,6 +179,108 @@ describe("Drizzle editorial repository mappings", () => {
       to: "published",
       actorId: "editor-1",
       occurredAt: "2026-08-07T10:00:00.000Z",
+    });
+  });
+});
+
+describe("editorial review evidence mapping", () => {
+  it("retains support and accepted-source provenance while excluding raw preparation payloads", () => {
+    const rows: Parameters<typeof mapReviewEvidence>[0] = [
+      {
+        claimId: "claim-1",
+        statement: "A supported statement.",
+        claimStatus: "verified",
+        supportId: "support-1",
+        supportKind: "direct",
+        locator: "Section 3",
+        excerpt: "The relevant passage.",
+        rationale: null,
+        supportAddedBy: "editor-1",
+        supportAddedAt: new Date("2026-08-01T00:00:00.000Z"),
+        sourceId: "source-1",
+        sourceTitle: "Official source",
+        sourcePublisher: "Publisher",
+        sourceType: "web",
+        canonicalUrl: "https://example.test/source",
+        externalIdentifier: null,
+        sourcePublishedAt: null,
+        sourceRetrievedAt: new Date("2026-07-01T00:00:00.000Z"),
+        sourceRelation: "Supports the claim.",
+        sourceRightsNote: "Public material.",
+        acceptedBy: "editor-1",
+        acceptedAt: new Date("2026-08-01T00:00:00.000Z"),
+        submissionId: "submission-1",
+        submissionKind: "transcript",
+        originalIdentifier: "Government briefing transcript",
+        originalUrl: null,
+        submittedBy: "editor-1",
+        submittedAt: new Date("2026-07-01T00:00:00.000Z"),
+        submissionRetrievedAt: null,
+        submissionRightsNote: "Editor supplied.",
+        processingStatus: "ready-for-review",
+        proposedTopic: "Government",
+        proposedSubtopic: null,
+        classificationConfidence: "0.900",
+        classificationRationale: "It explains civic institutions.",
+      },
+    ];
+
+    const result = mapReviewEvidence(rows);
+    expect(result).toMatchObject({
+      claims: [{ id: "claim-1", supports: [{ id: "support-1", sourceId: "source-1" }] }],
+      sources: [{
+        id: "source-1",
+        submission: { id: "submission-1", kind: "transcript", processingStatus: "ready-for-review" },
+      }],
+    });
+    expect(JSON.stringify(result)).not.toContain("processorOutput");
+    expect(JSON.stringify(result)).not.toContain("processingHistory");
+    expect(JSON.stringify(result)).not.toContain("contentFingerprint");
+  });
+
+  it("does not turn a Claim without an Accepted Source into evidence", () => {
+    const result = mapReviewEvidence([
+      {
+        claimId: "claim-unsupported",
+        statement: "Unverified statement.",
+        claimStatus: "candidate",
+        supportId: null,
+        supportKind: null,
+        locator: null,
+        excerpt: null,
+        rationale: null,
+        supportAddedBy: null,
+        supportAddedAt: null,
+        sourceId: null,
+        sourceTitle: null,
+        sourcePublisher: null,
+        sourceType: null,
+        canonicalUrl: null,
+        externalIdentifier: null,
+        sourcePublishedAt: null,
+        sourceRetrievedAt: null,
+        sourceRelation: null,
+        sourceRightsNote: null,
+        acceptedBy: null,
+        acceptedAt: null,
+        submissionId: null,
+        submissionKind: null,
+        originalIdentifier: null,
+        originalUrl: null,
+        submittedBy: null,
+        submittedAt: null,
+        submissionRetrievedAt: null,
+        submissionRightsNote: null,
+        processingStatus: null,
+        proposedTopic: null,
+        proposedSubtopic: null,
+        classificationConfidence: null,
+        classificationRationale: null,
+      },
+    ]);
+    expect(result).toEqual({
+      claims: [{ id: "claim-unsupported", statement: "Unverified statement.", status: "candidate", supports: [] }],
+      sources: [],
     });
   });
 });
