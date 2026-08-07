@@ -168,6 +168,104 @@ Submission and records an append-only `source` decision. It rejects stale
 proposal output and duplicate canonical URLs, and it cannot create a Claim,
 alter a Briefing, or publish.
 
+### Phase B2 evidence-review context
+
+Candidate-Claim acceptance needs a focused private read model before its editor
+control is built. The editor must be able to select a candidate, a revision
+created from the same Source Submission, and a Source accepted from the same
+Source Submission by their meaningful labels—not by copying opaque IDs.
+
+The private API exposes this BFF-only query:
+
+```text
+GET /v1/editorial/source-submissions/:submissionId/candidate-claim-context
+```
+
+Its exact DTO is:
+
+```ts
+type CandidateClaimAcceptanceContext = {
+  submission: {
+    id: string;
+    processingStatus: "ready-for-review" | "escalated";
+    originalIdentifier: string;
+    rightsNote: string;
+  };
+  proposal: {
+    outputFingerprint: string; // BFF command input; never rendered to the browser
+    candidateClaims: Array<{
+      index: number;
+      statement: string;
+      excerpt: string;
+      confidence: number;
+      rationale: string;
+    }>;
+  };
+  revisionsCreatedFromSubmission: Array<{
+    id: string;
+    briefingId: string;
+    topic: { title: string; slug: string };
+    sequence: number;
+    draftTitle: string;
+    templateVersion: string;
+    createdAt: string;
+  }>;
+  sourcesAcceptedFromSubmission: Array<{
+    id: string;
+    title: string;
+    publisher: string;
+    sourceType: string;
+    canonicalUrl: string;
+    retrievedAt: string;
+    rightsNote: string;
+    acceptedAt: string;
+  }>;
+};
+```
+
+The query returns `404` when the Source Submission does not exist and `422`
+when it has no `prepared` or `needs-review` proposal. Empty revisions or
+Sources arrays are valid, informative results; they make the Claim action
+unavailable rather than inventing a target.
+
+Only an authenticated Vercel BFF with the private service credential can call
+this query. The BFF derives the editor identity before any command. The API
+DTO excludes submitted transcript/document text, retrieval content
+fingerprints, processor prompts/output beyond the editor-visible proposal,
+worker leases/retries/errors, private credential material, and other Source
+Submissions. The BFF keeps `outputFingerprint` server-side; its browser view
+contains the candidate index and labelled choices, while the server action
+reconstructs the command from the trusted context.
+
+The UI is one compact **Add supported Claim** panel beside the candidate list:
+
+1. the editor chooses a candidate Claim (statement, excerpt, confidence, and
+   rationale remain visible);
+2. the revision select shows `Topic · draft title · revision N · date` and
+   contains only `revisionsCreatedFromSubmission`;
+3. the Source select shows `title — publisher` and contains only
+   `sourcesAcceptedFromSubmission`;
+4. a confirmation names the chosen Claim, revision, and Source; the BFF sends
+   the existing B2 command once; and
+5. success refreshes the context and decision record, while a conflict reloads
+   the authoritative choices.
+
+There is no free-text Claim editor, cross-submission target picker, automatic
+Source selection, or publish control in this panel.
+
+#### Narrow implementation plan
+
+1. Add a framework-independent editor query port and Postgres adapter that
+   joins the prepared Source Submission to its agent-origin revisions and
+   Accepted Sources by `source_submission_id` / `accepted_from_submission_id`.
+2. Add the private Fastify query with an explicit projection of the DTO above;
+   test absent, non-ready, empty-target, and populated contexts.
+3. Add a server-only BFF query/action adapter. It retains the fingerprint in
+   server state and passes the session-derived actor to the existing B2 command.
+4. Render the narrow panel and add browser coverage for unavailable targets,
+   one successful acceptance, and stale-output rejection. The public reader
+   contract remains unchanged.
+
 ## Application contracts
 
 Keep these transport-neutral commands behind the private application API. The
