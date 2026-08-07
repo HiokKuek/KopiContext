@@ -22,6 +22,10 @@ import { DrizzleAcceptCandidateClaimRepository } from "@/platform/persistence/ac
 import { DrizzleCandidateClaimAcceptanceContextRepository } from "@/platform/persistence/candidate-claim-acceptance-context-repository";
 import { DrizzleHumanRevisionRepository } from "@/platform/persistence/human-revision-repository";
 import { createHumanRevisionCommand } from "@/modules/editorial/create-human-revision-command";
+import { createEditorialDraftCommand } from "@/modules/editorial/create-editorial-draft-command";
+import { DrizzleCreateEditorialDraftRepository } from "@/platform/persistence/create-editorial-draft-repository";
+import { createAcceptEditorialSourceCommand } from "@/modules/evidence/accept-editorial-source-command";
+import { DrizzleAcceptEditorialSourceRepository } from "@/platform/persistence/accept-editorial-source-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -88,6 +92,8 @@ export function composePrivateApiRuntime(
     candidateClaimAcceptances: createAcceptCandidateClaimCommand(candidateClaimAcceptances),
     candidateClaimAcceptanceContexts,
     humanRevisions: createHumanRevisionCommand(new DrizzleHumanRevisionRepository(persistence.db)),
+    editorialDrafts: createEditorialDraftCommand(new DrizzleCreateEditorialDraftRepository(persistence.db)),
+    editorialSources: createAcceptEditorialSourceCommand(new DrizzleAcceptEditorialSourceRepository(persistence.db)),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),

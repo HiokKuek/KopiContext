@@ -39,6 +39,7 @@ Deliver a TypeScript modular monolith that lets a sole editor receive Source Sub
 27. As a developer, I want provider fakes for sources, AI, analytics delivery, clock, and scheduling, so that automated tests never depend on live third parties.
 28. As a coding agent, I want a canonical entry point linking vocabulary, PRDs, ADRs, and quality gates, so that I can make consistent, bounded changes.
 29. As the project owner, I want agents to submit changes for review without merging or deploying, so that agentic development retains human change control.
+30. As a reader who arrives without a specific Topic in mind, I want a small, clearly explained set of useful ways in, so that I can discover an informative Briefing without first knowing what to search for.
 
 ## Implementation Decisions
 
@@ -50,6 +51,7 @@ Deliver a TypeScript modular monolith that lets a sole editor receive Source Sub
 - Use hosted AI only for public or rights-cleared material. Store provider, model, prompt version, input provenance, and generated output for editorial review; exclude secrets, private documents, and personal data unless explicitly approved.
 - Begin with neutral civic explainers and exclude candidate/party comparisons, political analysis, and current political coverage. Require primary official Sources for civic Claims where available; require stronger corroboration for contested, interpretive, or current Claims.
 - Apply SGDS accessibility and interaction patterns as a foundation while using independent KopiContext brand tokens and editorial components. The design system must be mobile-first, keyboard-accessible, readable, and reduced-motion aware.
+- Treat discovery as a guided reader journey, not a catalogue dump. The homepage must pair the direct search prompt with a small, editorially chosen set of entry paths (for example, start-here explainers, timely Singapore context, and recently reviewed Briefings). Every published Briefing must offer a short, purposeful route onward through Related Topics, a useful next question, or both. Recommendations are editorially explainable and never personalised profiles.
 - Record first-party anonymous analytics in the primary database using rotating pseudonymous sessions, no raw IP retention, and a concise privacy notice.
 - Treat the application API as the highest primary test seam. Exercise reader and editorial journeys through it with real test Postgres and fake external providers; add browser end-to-end coverage for critical journeys.
 - Require a linked issue or PRD section, acceptance criteria, a red behaviour test, the smallest green implementation, and verified checks for every agent-driven change. Human review is required for merging and deployment.

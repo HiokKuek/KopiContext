@@ -32,6 +32,10 @@ _Avoid_: citation, reference material
 A factual statement in KopiContext content that is supported by one or more Sources.
 _Avoid_: fact
 
+**Editor-authored Claim**:
+A Claim written directly by the editor and linked to one or more Accepted Sources. It has the same evidence and publication requirements as an agent-suggested Claim; only its origin differs.
+_Avoid_: uncited manual note
+
 **Editorial Approval**:
 The sole editor's explicit decision to publish content after agent-assisted preparation and verification.
 _Avoid_: automatic publishing

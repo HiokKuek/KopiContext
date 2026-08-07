@@ -28,6 +28,7 @@ export function EditorWorkspace({
           <p>
             Review the evidence first. Publishing remains a deliberate, recorded decision.
           </p>
+          <Link className="text-link" href="/editor/briefings/new">Create a Draft Briefing</Link>
         </header>
 
         {queueState.kind === "available" ? <EditorialQueue queue={queueState.queue} /> : <UnavailableQueue />}
