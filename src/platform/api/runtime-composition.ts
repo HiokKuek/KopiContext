@@ -28,6 +28,8 @@ import { createAcceptEditorialSourceCommand } from "@/modules/evidence/accept-ed
 import { DrizzleAcceptEditorialSourceRepository } from "@/platform/persistence/accept-editorial-source-repository";
 import { createEditorialClaimCommand } from "@/modules/evidence/create-editorial-claim-command";
 import { DrizzleCreateEditorialClaimRepository } from "@/platform/persistence/create-editorial-claim-repository";
+import { createCurrentUpdateCommand } from "@/modules/editorial/create-current-update-command";
+import { DrizzleCreateCurrentUpdateRepository } from "@/platform/persistence/create-current-update-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -97,6 +99,7 @@ export function composePrivateApiRuntime(
     editorialDrafts: createEditorialDraftCommand(new DrizzleCreateEditorialDraftRepository(persistence.db)),
     editorialSources: createAcceptEditorialSourceCommand(new DrizzleAcceptEditorialSourceRepository(persistence.db)),
     editorialClaims: createEditorialClaimCommand(new DrizzleCreateEditorialClaimRepository(persistence.db)),
+    currentUpdates: createCurrentUpdateCommand(new DrizzleCreateCurrentUpdateRepository(persistence.db)),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
