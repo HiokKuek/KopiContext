@@ -85,6 +85,11 @@ The claim stores a worker ID, lease expiry, attempt count, and processing
 history. Expired leases become eligible again; a worker never assumes that a
 process which died mid-job completed its work.
 
+For editor-supplied transcripts, the claim includes the private transcript text
+only inside this worker boundary so a retrieval adapter can assess it. The text
+is excluded from the public catalogue, editor review DTOs, and private HTTP
+read routes. URL and document claims carry identifiers only.
+
 `createSourceSubmissionWorker` runs one claimed job through an injected
 provider-neutral preparation port. The production runtime does not compose a
 retriever or model yet. Unexpected job failures have a bounded retry schedule;

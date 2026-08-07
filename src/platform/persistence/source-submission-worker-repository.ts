@@ -37,7 +37,7 @@ export class DrizzleSourceSubmissionWorkerQueue implements SourceSubmissionWorke
         processingStartedAt: now, processingLeaseExpiresAt: leaseExpiresAt, processingWorkerId: input.workerId,
         processingHistory: history, updatedAt: now,
       }).where(eq(sourceSubmissions.id, candidate.id)).returning();
-      return claimed ? claimedSubmission(claimed, attempt, input.workerId) : undefined;
+      return claimed ? toClaimedSourceSubmission(claimed, attempt, input.workerId) : undefined;
     });
   }
 
@@ -64,9 +64,41 @@ export class DrizzleSourceSubmissionWorkerQueue implements SourceSubmissionWorke
   }
 }
 
-function claimedSubmission(row: SourceSubmissionRow, attempt: number, workerId: string): ClaimedSourceSubmission {
+/**
+ * This is a private worker projection, not an editor/public read model. A
+ * supplied transcript is included only here so a retrieval adapter can assess
+ * material the editor explicitly submitted; it must never cross an HTTP read
+ * boundary.
+ */
+export function toClaimedSourceSubmission(
+  row: Pick<
+    SourceSubmissionRow,
+    "id" | "idempotencyKey" | "kind" | "originalIdentifier" | "submittedBy" | "submittedAt" | "rightsNote" | "submittedTranscriptText"
+  >,
+  attempt: number,
+  workerId: string,
+): ClaimedSourceSubmission {
   if (!row.idempotencyKey) throw new Error("Queued Source Submission is missing an idempotency key.");
-  return { submissionId: row.id, idempotencyKey: row.idempotencyKey, attempt, workerId, request: { idempotencyKey: row.idempotencyKey, submission: { id: row.id, kind: row.kind, originalIdentifier: row.originalIdentifier, submittedBy: row.submittedBy, submittedAt: row.submittedAt.toISOString(), rightsNote: row.rightsNote } } };
+  return {
+    submissionId: row.id,
+    idempotencyKey: row.idempotencyKey,
+    attempt,
+    workerId,
+    request: {
+      idempotencyKey: row.idempotencyKey,
+      submission: {
+        id: row.id,
+        kind: row.kind,
+        originalIdentifier: row.originalIdentifier,
+        submittedBy: row.submittedBy,
+        submittedAt: row.submittedAt.toISOString(),
+        rightsNote: row.rightsNote,
+        ...(row.kind === "transcript" && row.submittedTranscriptText
+          ? { transcriptText: row.submittedTranscriptText }
+          : {}),
+      },
+    },
+  };
 }
 
 function historyOf(row: SourceSubmissionRow): PreparationTrace[] {
