@@ -37,6 +37,19 @@ export type InMemoryEditorialRepositorySeed = {
   auditRecords?: ReadonlyArray<EditorialAuditRecord>;
 };
 
+/**
+ * A known optimistic-concurrency failure. Production adapters throw this only
+ * when the Briefing or its evaluated revision has changed before the atomic
+ * state-and-audit write can commit. Operational failures must remain distinct
+ * so callers can surface and retry them appropriately.
+ */
+export class EditorialTransitionConflictError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "EditorialTransitionConflictError";
+  }
+}
+
 function cloneItem(item: EditorialItem): EditorialItem {
   return {
     ...item,
@@ -125,12 +138,14 @@ export class InMemoryEditorialRepository implements EditorialRepository {
   private assertSuccessfulTransitionCanBeCommitted(outcome: EditorialTransitionSuccess): void {
     const currentItem = this.items.get(outcome.item.id);
     if (!currentItem) {
-      throw new Error(`Cannot transition editorial item ${outcome.item.id}: item was not found.`);
+      throw new EditorialTransitionConflictError(
+        `Cannot transition editorial item ${outcome.item.id}: item was not found.`,
+      );
     }
 
     const revision = this.revisions.get(outcome.audit.revisionId);
     if (!revision || revision.itemId !== outcome.item.id) {
-      throw new Error(
+      throw new EditorialTransitionConflictError(
         `Cannot transition editorial item ${outcome.item.id}: audit revision does not belong to the item.`,
       );
     }
@@ -141,7 +156,7 @@ export class InMemoryEditorialRepository implements EditorialRepository {
       outcome.item.revisionId !== outcome.audit.revisionId ||
       outcome.audit.itemId !== outcome.item.id
     ) {
-      throw new Error(
+      throw new EditorialTransitionConflictError(
         `Cannot transition editorial item ${outcome.item.id}: the persisted item is no longer the evaluated revision.`,
       );
     }
