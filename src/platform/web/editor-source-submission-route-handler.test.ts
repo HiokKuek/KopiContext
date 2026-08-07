@@ -54,6 +54,14 @@ describe("editor Source Submission BFF route", () => {
     expect(JSON.stringify(queue.mock.calls)).not.toContain("ernest.tanhk@gmail.com");
   });
 
+  it("accepts bounded transcript text only for a transcript and forwards it only to the private queue", async () => {
+    const queue=vi.fn().mockResolvedValue({state:"queued",idempotencyKey:`source-submission:${submissionId}`,submissionId,queuedAt});
+    const handler=createEditorSourceSubmissionRouteHandler({requireEditor:async()=>({actorId:"google:113355779900",email:"ernest.tanhk@gmail.com"}),sourceSubmissions:{queue},newId:()=>submissionId});
+    expect((await handler(jsonRequest({kind:"transcript",originalIdentifier:"video",rightsNote:"Editor supplied",transcriptText:"Private transcript text."}))).status).toBe(202);
+    expect(queue.mock.calls[0]?.[0].submission.transcriptText).toBe("Private transcript text.");
+    expect((await handler(jsonRequest({kind:"url",originalIdentifier:"https://example.test",rightsNote:"Public",transcriptText:"not allowed"}))).status).toBe(400);
+  });
+
   it("rejects malformed browser input before evaluating the editor session", async () => {
     const requireEditor = vi.fn();
     const queue = vi.fn();

@@ -79,13 +79,16 @@ function parseSourceSubmissionRequest(value: unknown): SourceSubmissionRequestBo
       "submittedBy",
       "submittedAt",
       "rightsNote",
+      "transcriptText",
     ]) ||
     !isUuid(submission.id) ||
     !isSourceSubmissionKind(submission.kind) ||
     !isNonEmptyString(submission.originalIdentifier) ||
     !isNonEmptyString(submission.submittedBy) ||
     !isIsoDateTime(submission.submittedAt) ||
-    !isNonEmptyString(submission.rightsNote)
+    !isNonEmptyString(submission.rightsNote) ||
+    ("transcriptText" in submission && !isTranscriptText(submission.transcriptText)) ||
+    (submission.kind !== "transcript" && "transcriptText" in submission)
   ) {
     return undefined;
   }
@@ -99,8 +102,13 @@ function parseSourceSubmissionRequest(value: unknown): SourceSubmissionRequestBo
       submittedBy: submission.submittedBy,
       submittedAt: submission.submittedAt,
       rightsNote: submission.rightsNote,
+      ...("transcriptText" in submission ? { transcriptText: submission.transcriptText as string } : {}),
     },
   };
+}
+
+function isTranscriptText(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0 && value.length <= 100_000;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -108,8 +116,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function hasOnlyKeys(value: Record<string, unknown>, allowedKeys: ReadonlyArray<string>): boolean {
-  return Object.keys(value).every((key) => allowedKeys.includes(key)) &&
-    allowedKeys.every((key) => key in value);
+  return Object.keys(value).every((key) => allowedKeys.includes(key));
 }
 
 function isNonEmptyString(value: unknown): value is string {

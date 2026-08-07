@@ -58,6 +58,7 @@ export function createEditorSourceSubmissionRouteHandler(
           submittedBy: editor.actorId,
           submittedAt,
           rightsNote: draft.rightsNote,
+          ...(draft.transcriptText ? { transcriptText: draft.transcriptText } : {}),
         },
       });
       return Response.json({ submission }, { status: 202 });
@@ -68,14 +69,15 @@ export function createEditorSourceSubmissionRouteHandler(
 }
 
 function readDraft(value: unknown): SourceSubmissionDraft | undefined {
-  if (!isRecord(value) || !hasOnlyKeys(value, ["kind", "originalIdentifier", "rightsNote"])) return undefined;
-  if (!isKind(value.kind) || !boundedText(value.originalIdentifier, 2_048) || !boundedText(value.rightsNote, 2_000)) {
+  if (!isRecord(value) || !hasOnlyKeys(value, ["kind", "originalIdentifier", "rightsNote", "transcriptText"]) || !("kind" in value && "originalIdentifier" in value && "rightsNote" in value)) return undefined;
+  if (!isKind(value.kind) || !boundedText(value.originalIdentifier, 2_048) || !boundedText(value.rightsNote, 2_000) || ("transcriptText" in value && !boundedText(value.transcriptText, 100_000)) || (value.kind !== "transcript" && "transcriptText" in value)) {
     return undefined;
   }
   return {
     kind: value.kind,
     originalIdentifier: value.originalIdentifier.trim(),
     rightsNote: value.rightsNote.trim(),
+    ...("transcriptText" in value ? { transcriptText: (value.transcriptText as string).trim() } : {}),
   };
 }
 
@@ -88,7 +90,7 @@ async function jsonRequestBody(request: Request): Promise<unknown> {
 }
 
 function hasOnlyKeys(value: Record<string, unknown>, keys: ReadonlyArray<string>): boolean {
-  return Object.keys(value).every((key) => keys.includes(key)) && keys.every((key) => key in value);
+  return Object.keys(value).every((key) => keys.includes(key));
 }
 
 function isKind(value: unknown): value is SourceSubmissionKind {

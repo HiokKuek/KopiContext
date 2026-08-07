@@ -50,7 +50,7 @@ export const sourcePreparationResultState = pgEnum("source_preparation_result_st
 export const briefingRevisionOrigin = pgEnum("briefing_revision_origin", ["human", "agent"]);
 export const claimStatus = pgEnum("claim_status", ["candidate", "verified", "rejected"]);
 export const claimSupportKind = pgEnum("claim_support_kind", ["direct", "contextual"]);
-export const proposalDecisionPart = pgEnum("proposal_decision_part", ["classification-and-draft"]);
+export const proposalDecisionPart = pgEnum("proposal_decision_part", ["classification-and-draft", "source"]);
 export const proposalDecisionOutcome = pgEnum("proposal_decision_outcome", ["accepted"]);
 export const anonymousAnalyticsEventType = pgEnum("anonymous_analytics_event_type", [
   "page-view",
@@ -240,6 +240,7 @@ export const sourceSubmissions = pgTable(
     kind: sourceSubmissionKind("kind").notNull(),
     originalIdentifier: text("original_identifier").notNull(),
     originalUrl: text("original_url"),
+    submittedTranscriptText: text("submitted_transcript_text"),
     canonicalIdentifier: text("canonical_identifier"),
     contentFingerprint: text("content_fingerprint"),
     submittedBy: text("submitted_by").notNull(),
@@ -289,6 +290,10 @@ export const sourceSubmissions = pgTable(
     check(
       "source_submissions_confidence_in_range",
       sql`(${table.classificationConfidence} IS NULL OR (${table.classificationConfidence} >= 0 AND ${table.classificationConfidence} <= 1))`,
+    ),
+    check(
+      "source_submissions_transcript_text_kind",
+      sql`(${table.submittedTranscriptText} IS NULL OR ${table.kind} = 'transcript')`,
     ),
     check(
       "source_submissions_processing_provenance_complete",
@@ -427,20 +432,23 @@ export const proposalDecisionRecords = pgTable(
       .defaultNow()
       .notNull(),
     reasonOrNote: text("reason_or_note"),
-    topicId: uuid("topic_id")
-      .notNull()
-      .references(() => topics.id, { onDelete: "restrict", onUpdate: "cascade" }),
-    briefingId: uuid("briefing_id")
-      .notNull()
-      .references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
-    briefingRevisionId: uuid("briefing_revision_id")
-      .notNull()
-      .references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    topicId: uuid("topic_id").references(() => topics.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingId: uuid("briefing_id").references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingRevisionId: uuid("briefing_revision_id").references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    acceptedSourceId: uuid("accepted_source_id").references(() => acceptedSources.id, { onDelete: "restrict", onUpdate: "cascade" }),
     metadata: jsonb("metadata").default({}).notNull(),
   },
   (table) => [
     index("proposal_decision_records_submission_occurred_idx").on(table.sourceSubmissionId, table.occurredAt),
     check("proposal_decision_records_actor_not_empty", sql`length(${table.actorId}) > 0`),
+    check(
+      "proposal_decision_records_phase_a_results",
+      sql`(${table.proposalPart} <> 'classification-and-draft' OR (${table.topicId} IS NOT NULL AND ${table.briefingId} IS NOT NULL AND ${table.briefingRevisionId} IS NOT NULL AND ${table.acceptedSourceId} IS NULL))`,
+    ),
+    check(
+      "proposal_decision_records_source_results",
+      sql`(${table.proposalPart} <> 'source' OR (${table.acceptedSourceId} IS NOT NULL AND ${table.topicId} IS NULL AND ${table.briefingId} IS NULL AND ${table.briefingRevisionId} IS NULL))`,
+    ),
   ],
 );
 

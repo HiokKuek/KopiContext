@@ -31,6 +31,7 @@ export function SourceSubmissionForm({ editorEmail }: Readonly<{ editorEmail: st
           kind: formData.get("kind"),
           originalIdentifier: formData.get("originalIdentifier"),
           rightsNote: formData.get("rightsNote"),
+          ...(kind === "transcript" ? { transcriptText: formData.get("transcriptText") } : {}),
         }),
       });
       const result: unknown = await response.json();
@@ -87,6 +88,12 @@ export function SourceSubmissionForm({ editorEmail }: Readonly<{ editorEmail: st
           aria-describedby="identifier-hint"
         />
         <p id="identifier-hint" className="field-hint">Use a stable link, upload reference, or transcript identifier that you can recognise later.</p>
+
+        {kind === "transcript" ? <>
+          <label htmlFor="transcript-text">Transcript text</label>
+          <textarea id="transcript-text" name="transcriptText" required maxLength={100000} rows={10} placeholder="Paste the transcript text. It stays private and is never shown in the reader experience." />
+          <p className="field-hint">Private worker input only. It will not be displayed in the editor review view.</p>
+        </> : null}
 
         <label htmlFor={rightsId}>Rights and context</label>
         <textarea

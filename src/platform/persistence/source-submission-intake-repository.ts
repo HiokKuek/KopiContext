@@ -30,6 +30,7 @@ export class DrizzleSourceSubmissionIntakeRepository implements SourceSubmission
         originalIdentifier: request.submission.originalIdentifier,
         originalUrl:
           request.submission.kind === "url" ? request.submission.originalIdentifier : null,
+        submittedTranscriptText: request.submission.transcriptText ?? null,
         submittedBy: request.submission.submittedBy,
         submittedAt: asDate(request.submission.submittedAt),
         rightsNote: request.submission.rightsNote,

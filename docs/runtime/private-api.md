@@ -230,6 +230,13 @@ retry with the same idempotency key returns the original acknowledgement and
 does not create another queue record. Unknown or incomplete fields receive a
 `400` response using the stable `invalid_request` error envelope.
 
+For a `transcript` submission only, the protected editor BFF may include up to
+100,000 characters of pasted transcript text. It requires a rights note and
+is retained in a private Source Submission column solely for a later worker
+retrieval adapter. It is never returned by public content, editor review
+queries, queue acknowledgements, logs, fingerprints, or analytics. URL and
+document submissions reject transcript text.
+
 The later private worker must atomically claim `submitted` records by moving
 them to `processing`, then use the source-preparation application seam and its
 durable result store to finalise the same record. Its retrieval and provider

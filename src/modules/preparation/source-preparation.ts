@@ -15,6 +15,8 @@ export type SourceSubmissionForPreparation = {
   submittedBy: string;
   submittedAt: string;
   rightsNote: string;
+  /** Private transcript material. Never return this in an editor or public DTO. */
+  transcriptText?: string;
 };
 
 export type RetrievedMaterial = {

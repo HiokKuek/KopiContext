@@ -1,0 +1,2 @@
+ALTER TABLE "source_submissions" ADD COLUMN "submitted_transcript_text" text;--> statement-breakpoint
+ALTER TABLE "source_submissions" ADD CONSTRAINT "source_submissions_transcript_text_kind" CHECK (("source_submissions"."submitted_transcript_text" IS NULL OR "source_submissions"."kind" = 'transcript'));

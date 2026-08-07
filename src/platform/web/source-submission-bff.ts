@@ -83,4 +83,5 @@ export type SourceSubmissionDraft = Readonly<{
   kind: SourceSubmissionKind;
   originalIdentifier: string;
   rightsNote: string;
+  transcriptText?: string;
 }>;
