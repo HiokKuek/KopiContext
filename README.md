@@ -15,6 +15,7 @@ KopiContext helps English-speaking Singaporeans gain enough accurate, source-bac
 - [Editor workspace v1 design](docs/design/editor-workspace-v1.md)
 - [Postgres persistence baseline](docs/runtime/persistence.md)
 - [Private application API baseline](docs/runtime/private-api.md)
+- [Anonymous Topic-request handoff](docs/runtime/topic-requests.md)
 
 The first vertical slice is the civic Briefing, **How Singapore's Government Works**. It proves source submission, agent preparation, Editorial Approval, public reading, search, and anonymous analytics before the product expands its Topic catalogue.
 

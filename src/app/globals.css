@@ -105,6 +105,17 @@ p { margin: 0 0 20px; }
 .empty-page { width: min(100% - 40px, 640px); margin: 15vh auto; }
 .empty-page h1 { font-size: clamp(2.5rem, 7vw, 4.5rem); }
 .text-link { color: var(--color-rain); font-family: var(--utility-face); font-weight: 700; }
+.topic-request-form { margin: 28px 0 24px; border-top: 1px solid color-mix(in srgb, var(--color-rain) 32%, transparent); padding-top: 20px; font-family: var(--utility-face); }
+.topic-request-form > label { display: block; margin-bottom: 8px; color: var(--color-ink); font-size: .88rem; font-weight: 750; }
+.topic-request-controls { display: grid; gap: 10px; }
+.topic-request-controls input, .topic-proposition input { width: 100%; min-height: 46px; border: 1px solid var(--color-muted); border-radius: 5px; padding: 9px 12px; background: #fffdf8; color: var(--color-ink); font: inherit; }
+.topic-request-controls input:focus-visible, .topic-proposition input:focus-visible { outline: 3px solid var(--color-rain); outline-offset: 2px; }
+.topic-request-controls button, .topic-proposition button { min-height: 46px; border: 1px solid var(--color-ink); border-radius: 5px; padding: 9px 14px; background: var(--color-ink); color: var(--color-paper); font: inherit; font-weight: 750; cursor: pointer; }
+.topic-request-controls button:disabled { cursor: wait; opacity: .72; }
+.topic-request-privacy, .topic-request-status { margin: 10px 0 0; font-size: .78rem; line-height: 1.45; }
+.topic-request-privacy { color: var(--color-muted); }
+.topic-request-status { min-height: 1.45em; color: var(--color-ink); font-weight: 650; }
+@media (min-width: 540px) { .topic-request-controls { grid-template-columns: minmax(0, 1fr) auto; } .topic-request-controls button { min-width: 172px; } }
 @media (min-width: 760px) { .briefing-shell { padding-top: 72px; } .government-map { grid-template-columns: minmax(0, .85fr) minmax(350px, 1.15fr); align-items: center; gap: 44px; } .branch-diagram ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 31px; padding-top: 18px; } .branch-diagram ol::before { top: 0; right: 16.66%; bottom: auto; left: 16.66%; width: auto; height: 2px; } .branch-diagram li { min-height: 118px; padding: 22px 14px 14px; } .branch-diagram li::before { top: -22px; left: 50%; width: 2px; height: 21px; border-top: 0; border-left: 2px solid var(--color-mist); } .branch-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } .context-pair, .participate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 980px) { .reading-grid { grid-template-columns: 190px minmax(0, 730px); gap: 64px; } .conversation-path { position: sticky; top: 24px; align-self: start; overflow: visible; border-bottom: 0; padding: 4px 0 0; } .conversation-path ol { display: block; width: auto; } .conversation-path li { min-width: 0; border-left: 2px solid var(--color-mist); } .conversation-path a { padding: 0 0 20px 16px; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
+import { TopicRequestForm } from "./topic-request-form";
 
 export const metadata: Metadata = {
   title: "Search Topics",
@@ -97,9 +98,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             <p className="section-kicker">No published Briefing yet</p>
             <h2 id="empty-results-heading">We do not have a Topic on “{query}” yet.</h2>
             <p>
-              We are still building the collection. Topic requests will be available
-              here soon; in the meantime, try a related word or start with civic life.
+              We are still building the collection. Request it below, or try a related
+              word while the editor considers what to explain next.
             </p>
+            <TopicRequestForm initialTopic={query} />
             <Link className="text-link" href="/topics/how-singapores-government-works">
               Explore how Singapore&apos;s Government Works
             </Link>
