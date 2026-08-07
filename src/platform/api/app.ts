@@ -6,10 +6,15 @@ import {
   type PrivateServiceIdentity,
   type ServiceCredentialAuthenticator,
 } from "./service-auth";
+import {
+  registerEditorialTransitionRoute,
+  type EditorialBriefingTransitionCommand,
+} from "./editorial-transition-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
+  editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
   now?: () => Date;
 }>;
 
@@ -94,6 +99,20 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
     return briefing;
   });
 
+  if (dependencies.editorialBriefingTransitions) {
+    registerEditorialTransitionRoute(app, {
+      editorialBriefingTransitions: dependencies.editorialBriefingTransitions,
+      now,
+      invalidRequest: (message) => new ApiError(400, "invalid_request", message),
+      rejectedTransition: () =>
+        new ApiError(
+          422,
+          "editorial_transition_rejected",
+          "The requested editorial transition cannot be completed.",
+        ),
+    });
+  }
+
   app.setNotFoundHandler((_request, reply) => {
     return reply.code(404).send(errorBody("not_found", "The requested endpoint does not exist."));
   });
@@ -101,6 +120,12 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof ApiError) {
       return reply.code(error.statusCode).send(errorBody(error.code, error.message));
+    }
+
+    if (hasErrorCode(error, "FST_ERR_CTP_INVALID_JSON_BODY")) {
+      return reply
+        .code(400)
+        .send(errorBody("invalid_request", "Request body must be valid JSON."));
     }
 
     return reply
@@ -113,4 +138,13 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
 
 function errorBody(code: string, message: string): ApiErrorBody {
   return { error: { code, message } };
+}
+
+function hasErrorCode(error: unknown, code: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === code
+  );
 }
