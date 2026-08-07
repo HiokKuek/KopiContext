@@ -2,10 +2,10 @@
 
 > **Editorial status:** Reviewable draft only. It is not a published Briefing, an accepted Source record, or Editorial Approval.
 >
-> **Topic:** The Green Plan and Climate Adaptation  
-> **Briefing Template:** v1  
-> **Drafted and source access date:** 7 August 2026  
-> **Suggested baseline review date:** 7 November 2026  
+> **Topic:** The Green Plan and Climate Adaptation
+> **Briefing Template:** v1
+> **Drafted and source access date:** 7 August 2026
+> **Suggested baseline review date:** 7 November 2026
 > **Freshness:** Sustainability framework and climate planning — review at least quarterly, with an annual full framework check. Targets, progress reports, climate studies, legislation and specific works must be dated.
 
 ## One-sentence explanation

@@ -2,10 +2,10 @@
 
 > **Editorial status:** Reviewable draft only. It is not a published Briefing, an accepted Source record, or Editorial Approval.
 >
-> **Topic:** Energy Transition  
-> **Briefing Template:** v1  
-> **Drafted and source access date:** 7 August 2026  
-> **Suggested baseline review date:** 7 November 2026  
+> **Topic:** Energy Transition
+> **Briefing Template:** v1
+> **Drafted and source access date:** 7 August 2026
+> **Suggested baseline review date:** 7 November 2026
 > **Freshness:** Energy systems and policy — review at least quarterly. Electricity-import projects, fuel shares, technology options, price conditions and targets belong in dated Current Updates.
 
 ## One-sentence explanation

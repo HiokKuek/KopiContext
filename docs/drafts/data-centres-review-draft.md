@@ -2,10 +2,10 @@
 
 > **Editorial status:** Reviewable draft only. It is not a published Briefing, an accepted Source record, or Editorial Approval.
 >
-> **Topic:** Data Centres  
-> **Briefing Template:** v1  
-> **Drafted and source access date:** 7 August 2026  
-> **Suggested baseline review date:** 7 November 2026  
+> **Topic:** Data Centres
+> **Briefing Template:** v1
+> **Drafted and source access date:** 7 August 2026
+> **Suggested baseline review date:** 7 November 2026
 > **Freshness:** Infrastructure and policy — review at least quarterly. Capacity, allocation rounds, standards, technology and energy policy must be kept in dated Current Updates.
 
 ## One-sentence explanation
