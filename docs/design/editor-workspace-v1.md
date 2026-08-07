@@ -58,7 +58,7 @@ Source Submission is a companion entry point, not a hidden part of the
 Briefing form:
 
 ```text
-New Source Submission → preparation outcome → proposal review → Briefing review
+New Source Submission → durable queue → preparation outcome → proposal review → Briefing review
 ```
 
 A transcript, URL, or document stays a **Source Submission** until the editor
@@ -78,7 +78,7 @@ not a progress score.
 | `/editor` | orient the editor to current work | counts by Editorial Workflow state; a short ordered queue; stale published Briefings; preparation failures/escalations | Open a Briefing; submit material; filter to a state |
 | `/editor/briefings/:briefingId` | decide whether one revision can move forward | state, title/Topic, revision ID and time, Template completeness, draft sections, Claims with support, accepted Sources, freshness/review age, audit timeline | Return, move to Needs verification, start review, approve, publish, archive, restore; open reader preview |
 | `/editor/briefings/:briefingId/preview` | inspect exactly what readers would receive | the selected published revision using the public Briefing presentation; publication/review metadata | Return to review; open public URL in a new tab only after Published |
-| `/editor/source-submissions/new` | record material for preparation | kind (URL/document/transcript), original identifier, rights note, editor identity and submitted time shown as generated metadata | Submit for preparation; cancel |
+| `/editor/source-submissions/new` | record material for later preparation | kind (URL/document/transcript), original identifier, rights note, editor identity and submitted time shown as generated metadata | Queue material; cancel |
 | `/editor/source-submissions/:submissionId` | review a prepared proposal without treating it as truth | processing outcome/history, provenance, duplicate signal, proposed Topic/Subtopic plus rationale/confidence, candidate Claims/excerpts, draft proposal, escalation | Open linked Briefing review; return/reject proposal; create or attach a draft only through a later explicit command |
 
 The public site has no editor navigation. The editor shell has a clear
@@ -157,7 +157,7 @@ revision; the API remains the authority and may still reject a stale request.
 | Approve | confirmation names revision and evidence readiness | optional review note if policy later needs it | approved state and audit update | explain why approval is unavailable; never imply it succeeded |
 | Publish | strong confirmation: title, exact revision, public URL consequence | explicit “Publish” confirmation | Published state, audit record, and preview link | if conflict/rejection, reload authoritative state and announce the change |
 | Archive / restore | confirmation describes public visibility effect | archive reason; restore reason if policy requires | state and audit update | retain reason and show a specific error |
-| Submit material | validates client-friendly fields before server submit | kind, identifier, rights note | acknowledgement with submission ID and processing state | preserve fields; identify the invalid field or safe retry action |
+| Queue material | validates client-friendly fields before server submit | kind, identifier, rights note | acknowledgement with submission ID and queued state | preserve fields; identify the invalid field or safe retry action |
 
 Every command has pending, success, rejected, conflict, and unavailable
 states. Disable only the submitted control while pending; keep navigation and
@@ -180,7 +180,7 @@ editor-only application query ports before rendering the routes:
 | `getEditorialBriefing` | revision, Template section states, Claims/support, accepted Sources, Source Submission provenance, freshness, audit records, allowed actions | needed |
 | `getEditorialPreview` | selected revision rendered through the same public presentation contract | needed |
 | `transitionBriefing` | existing transition command; trusted actor identity, state/audit response | exists; must be session-composed before UI exposure |
-| `createSourceSubmission` | existing idempotent preparation command; generated submission metadata and outcome | exists; needs server form/BFF composition |
+| `queueSourceSubmission` | trusted server-generated ID, timestamp, submitter, and private queue acknowledgement | exists through `/editor/source-submissions/new`; later worker preparation remains separate |
 | proposal decisions and content editing | explicit accept/reject/return semantics for proposed placement, Claims, Sources, and structured revision edits | needed; do not fake these as client-only switches |
 | Topic creation/merge and Current Update management | explicit editorial command/read interfaces | later within the broader PRD, not required to prove the first civic review journey |
 
