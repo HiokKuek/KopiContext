@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { AcceptCandidateClaimRepository, AcceptCandidateClaimRequest, PreparedCandidateClaims } from "@/modules/evidence/accept-candidate-claim-command";
 import { fingerprintProposalOutput } from "@/modules/editorial/accept-prepared-proposal-command";
@@ -15,8 +15,11 @@ export class DrizzleAcceptCandidateClaimRepository implements AcceptCandidateCla
   await tx.execute(sql`select ${sourceSubmissions.id} from ${sourceSubmissions} where ${sourceSubmissions.id}=${request.submissionId} for update`);
   const [source]=await tx.select().from(sourceSubmissions).where(eq(sourceSubmissions.id,request.submissionId)).limit(1); const current=source?prepared(source):undefined;
   if(!current||current.outputFingerprint!==request.expectedOutputFingerprint||JSON.stringify(current.candidateClaims[request.candidateIndex])!==JSON.stringify(request.candidate))return {kind:"proposal-conflict" as const};
-  const [[revision],[accepted]] = await Promise.all([tx.select({id:briefingRevisions.id}).from(briefingRevisions).where(and(eq(briefingRevisions.id,request.briefingRevisionId),eq(briefingRevisions.templateVersion,"v1"))).limit(1),tx.select({id:acceptedSources.id}).from(acceptedSources).where(eq(acceptedSources.id,request.acceptedSourceId)).limit(1)]);
-  if(!revision)return {kind:"target-conflict" as const}; if(!accepted)return {kind:"source-conflict" as const}; const at=new Date(request.occurredAt);
+  const [[revision],[accepted]] = await Promise.all([tx.select({id:briefingRevisions.id,briefingId:briefingRevisions.briefingId}).from(briefingRevisions).where(and(eq(briefingRevisions.id,request.briefingRevisionId),eq(briefingRevisions.templateVersion,"v1"))).limit(1),tx.select({id:acceptedSources.id}).from(acceptedSources).where(eq(acceptedSources.id,request.acceptedSourceId)).limit(1)]);
+  if(!revision)return {kind:"target-conflict" as const};
+  const [currentRevision]=await tx.select({id:briefingRevisions.id}).from(briefingRevisions).where(eq(briefingRevisions.briefingId,revision.briefingId)).orderBy(desc(briefingRevisions.sequence)).limit(1);
+  if(currentRevision?.id!==revision.id)return {kind:"target-conflict" as const};
+  if(!accepted)return {kind:"source-conflict" as const}; const at=new Date(request.occurredAt);
   const [claim]=await tx.insert(claims).values({briefingRevisionId:revision.id,statement:request.candidate.statement,status:"candidate",createdBy:request.actorId,createdAt:at,updatedAt:at}).returning({id:claims.id});
   const [support]=await tx.insert(claimSupports).values({claimId:claim.id,acceptedSourceId:accepted.id,kind:"direct",excerpt:request.candidate.excerpt,rationale:request.candidate.rationale,addedBy:request.actorId,addedAt:at}).returning({id:claimSupports.id});
   const [decision]=await tx.insert(proposalDecisionRecords).values({idempotencyKey:request.idempotencyKey,sourceSubmissionId:request.submissionId,proposalOutputFingerprint:request.expectedOutputFingerprint,proposalPart:"candidate-claim",outcome:"accepted",actorId:request.actorId,occurredAt:at,briefingRevisionId:revision.id,acceptedSourceId:accepted.id,claimId:claim.id,claimSupportId:support.id,metadata:{candidateIndex:request.candidateIndex,statement:request.candidate.statement}}).returning({id:proposalDecisionRecords.id});

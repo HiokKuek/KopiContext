@@ -99,7 +99,10 @@ export class DrizzleCandidateClaimAcceptanceContextRepository
           rightsNote: submission.rightsNote,
         },
         proposal: prepared,
-        revisionsCreatedFromSubmission: revisions.flatMap((revision) => {
+        // The acceptance command only permits the latest revision. Keep old
+        // immutable snapshots out of the chooser so the UI cannot invite a
+        // stale evidence decision.
+        revisionsCreatedFromSubmission: [...currentRevisionByBriefing(revisions).values()].flatMap((revision) => {
           const draftTitle = draftTitleFrom(revision.content) ?? revision.topicTitle;
           return draftTitle === undefined
             ? []
@@ -177,6 +180,15 @@ export function draftTitleFrom(value: unknown): string | undefined {
   return isRecord(value) && typeof value.title === "string" && value.title.trim().length > 0
     ? value.title
     : undefined;
+}
+
+function currentRevisionByBriefing<T extends { briefingId: string; sequence: number }>(revisions: ReadonlyArray<T>): Map<string, T> {
+  const current = new Map<string, T>();
+  for (const revision of revisions) {
+    const existing = current.get(revision.briefingId);
+    if (!existing || revision.sequence > existing.sequence) current.set(revision.briefingId, revision);
+  }
+  return current;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
