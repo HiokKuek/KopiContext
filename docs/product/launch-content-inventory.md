@@ -25,7 +25,9 @@ Briefing record that is:
    kept in separate Current Updates.
 
 The status below is a repository planning status as at **2026-08-07**, not a
-query of a production database. `Prototype fixture` means the repository has a
+query of a production database. `Review draft` means a source-linked editorial
+working document exists, but it is still not proof of accepted evidence,
+Editorial Approval, or publication. `Prototype fixture` means the repository has a
 local-development visual fixture only; it is specifically not proof of
 Editorial Approval, accepted evidence, or production publication. `Planned`
 means no durable editorial artefact is recorded in this repository yet. The
@@ -53,7 +55,7 @@ corroboration when a Claim is contested, interpretive, or current.
 
 | Topic | Repository status | Baseline scope | Freshness | Candidate source families |
 | --- | --- | --- | --- | --- |
-| How Singapore's Government Works | Prototype fixture — not launch evidence | Three organs of state; how law and policy move; President, Prime Minister, Cabinet, ministries and courts. Exclude party/candidate or live-political analysis. | Structural | [PMO: The Government](https://www.pmo.gov.sg/about-us/the-government/); [Singapore Courts: legal system](https://www.judiciary.gov.sg/who-we-are/about-legal-system); [Parliament](https://www.parliament.gov.sg/); [Singapore Statutes Online](https://sso.agc.gov.sg/) |
+| How Singapore's Government Works | Review draft — [open draft](../drafts/how-singapores-government-works-review-draft.md); not launch evidence | Three organs of state; how law and policy move; President, Prime Minister, Cabinet, ministries and courts. Exclude party/candidate or live-political analysis. | Structural | [PMO: The Government](https://www.pmo.gov.sg/about-us/the-government/); [Singapore Courts: legal system](https://www.judiciary.gov.sg/who-we-are/about-legal-system); [Parliament](https://www.parliament.gov.sg/); [Singapore Statutes Online](https://sso.agc.gov.sg/) |
 | Parliament and Elections | Planned | Parliament's work, a Bill's path, constituencies and voting process. Exclude candidate/party comparison and live election coverage. | Policy/service | [Parliament: Bills](https://www.parliament.gov.sg/parliamentary-business/bills); [Elections Department](https://www.eld.gov.sg/); [Constitution on Singapore Statutes Online](https://sso.agc.gov.sg/Act/CONS1963); [PMO: The Government](https://www.pmo.gov.sg/about-us/the-government/) |
 | HDB and Public Housing | Planned | What public housing is; HDB's role; flat types, home ownership and resale vocabulary; separate changing grants/prices/policies. | Policy/service | [HDB: public housing](https://www.hdb.gov.sg/residential); [HDB: buying a flat](https://www.hdb.gov.sg/residential/buying-a-flat); [HDB: resale](https://www.hdb.gov.sg/residential/buying-a-flat/resale); [SingStat](https://tablebuilder.singstat.gov.sg/) |
 | CPF | Planned | The compulsory savings framework, account purposes, contribution basics and links to housing, healthcare and retirement. Not personal financial advice. | Policy/service | [CPF overview](https://www.cpf.gov.sg/member/cpf-overview); [CPF contributions](https://www.cpf.gov.sg/member/growing-your-savings/cpf-contributions); [CPF LIFE](https://www.cpf.gov.sg/member/plan-your-finances/retirement-income); [CPF statistics](https://www.cpf.gov.sg/member/infohub/reports-and-statistics/cpf-statistics) |
