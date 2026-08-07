@@ -12,6 +12,7 @@ KopiContext helps English-speaking Singaporeans gain enough accurate, source-bac
 - [Team charters](docs/teams/)
 - [Implementation roadmap](docs/architecture/implementation-roadmap.md)
 - [Design and voice standard](docs/design/briefing-experience.md)
+- [Editor workspace v1 design](docs/design/editor-workspace-v1.md)
 - [Postgres persistence baseline](docs/runtime/persistence.md)
 - [Private application API baseline](docs/runtime/private-api.md)
 
