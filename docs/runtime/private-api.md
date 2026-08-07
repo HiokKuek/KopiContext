@@ -245,6 +245,26 @@ It never retries commands because a failed response can still mean a write was
 accepted. It maps HTTP and API error envelopes to `PrivateApiClientError` so
 web routes can handle failures without depending on Fastify.
 
+## Public reader catalogue composition
+
+The anonymous reader still renders through Next.js Server Components; it does
+not call the private API from a browser. In deployed mode,
+`src/platform/web/public-catalogue.ts` requires all of these server-only
+variables:
+
+- `PUBLIC_CATALOGUE_SLUGS` — comma-separated published Briefing slugs. This is
+  the small bootstrap catalogue used for featured content and search until a
+  dedicated public catalogue query is added deliberately.
+- `PRIVATE_API_BASE_URL`
+- `PRIVATE_API_SERVICE_CREDENTIAL`
+
+`PUBLIC_CATALOGUE_RUNTIME_MODE` defaults to `production`, and a missing
+manifest or credential is a startup/render error rather than a fixture
+fallback. Set it to `local-development` only for local reader work: that
+explicitly selects the checked-in Published Briefing fixtures and must not be
+used in a deployed environment. None of these values use the `NEXT_PUBLIC_`
+prefix.
+
 ## Verify the boundary
 
 `src/platform/api/app.test.ts` calls the Fastify adapter with `app.inject()`.

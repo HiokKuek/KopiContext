@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
+import { connection } from "next/server";
+import type { PublishedBriefing } from "@/modules/content/published-briefings";
+import { createPublicCatalogueFromEnvironment } from "@/platform/web/public-catalogue";
 import { AnalyticsSearch } from "../analytics/analytics-search";
 import { TopicRequestForm } from "./topic-request-form";
 
@@ -13,24 +15,22 @@ type SearchPageProps = {
   searchParams: Promise<{ q?: string | string[] }>;
 };
 
-const civicBriefing = getPublishedBriefingBySlug("how-singapores-government-works");
-
 function getQuery(value: string | string[] | undefined) {
   const query = Array.isArray(value) ? value[0] : value;
   return query?.trim().slice(0, 120) ?? "";
 }
 
-function matchesCivicBriefing(query: string) {
-  if (!civicBriefing || !query) {
+function matchesBriefing(briefing: PublishedBriefing, query: string) {
+  if (!query) {
     return false;
   }
 
   const haystack = [
-    civicBriefing.title,
-    civicBriefing.oneSentenceExplanation,
-    civicBriefing.thirtySecondOverview,
-    ...civicBriefing.keyTerms.map(({ term, definition }) => `${term} ${definition}`),
-    ...civicBriefing.entities,
+    briefing.title,
+    briefing.oneSentenceExplanation,
+    briefing.thirtySecondOverview,
+    ...briefing.keyTerms.map(({ term, definition }) => `${term} ${definition}`),
+    ...briefing.entities,
   ]
     .join(" ")
     .toLocaleLowerCase("en-SG");
@@ -42,8 +42,11 @@ function matchesCivicBriefing(query: string) {
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
+  await connection();
   const query = getQuery((await searchParams).q);
-  const hasResult = matchesCivicBriefing(query);
+  const publishedBriefings = await createPublicCatalogueFromEnvironment().listPublishedBriefings();
+  const results = query ? publishedBriefings.filter((briefing) => matchesBriefing(briefing, query)) : [];
+  const hasResult = results.length > 0;
 
   return (
     <>
@@ -84,14 +87,21 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           </section>
         ) : null}
 
-        {hasResult && civicBriefing ? (
+        {hasResult ? (
           <section className="overview" aria-labelledby="results-heading">
-            <p className="section-kicker">One result</p>
-            <h2 id="results-heading">{civicBriefing.title}</h2>
-            <p>{civicBriefing.oneSentenceExplanation}</p>
-            <Link className="text-link" href={`/topics/${civicBriefing.slug}`}>
-              Read the Briefing
-            </Link>
+            <p className="section-kicker">{results.length === 1 ? "One result" : `${results.length} results`}</p>
+            <h2 id="results-heading">Published Briefings</h2>
+            <ul className="search-results">
+              {results.map((briefing) => (
+                <li key={briefing.slug}>
+                  <h3>{briefing.title}</h3>
+                  <p>{briefing.oneSentenceExplanation}</p>
+                  <Link className="text-link" href={`/topics/${briefing.slug}`}>
+                    Read the Briefing
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         ) : null}
 
@@ -104,9 +114,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               word while the editor considers what to explain next.
             </p>
             <TopicRequestForm initialTopic={query} />
-            <Link className="text-link" href="/topics/how-singapores-government-works">
-              Explore how Singapore&apos;s Government Works
-            </Link>
+            {publishedBriefings[0] ? (
+              <Link className="text-link" href={`/topics/${publishedBriefings[0].slug}`}>
+                Explore {publishedBriefings[0].title}
+              </Link>
+            ) : null}
           </section>
         ) : null}
       </main>

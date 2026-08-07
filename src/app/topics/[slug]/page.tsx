@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import {
-  getPublishedBriefingBySlug,
   type BriefingVisualExplainer,
   type ConceptMapExplainer,
 } from "@/modules/content/published-briefings";
+import { createPublicCatalogueFromEnvironment } from "@/platform/web/public-catalogue";
 import { AnalyticsTopicView } from "../../analytics/analytics-topic-view";
 
 type TopicPageProps = {
@@ -116,8 +117,9 @@ function SupportingVisualExplainers({ explainers }: { explainers: readonly Brief
 }
 
 export async function generateMetadata({ params }: TopicPageProps): Promise<Metadata> {
+  await connection();
   const { slug } = await params;
-  const briefing = getPublishedBriefingBySlug(slug);
+  const briefing = await createPublicCatalogueFromEnvironment().findPublishedBriefingBySlug(slug);
 
   if (!briefing) {
     return { title: "Topic not found" };
@@ -130,8 +132,9 @@ export async function generateMetadata({ params }: TopicPageProps): Promise<Meta
 }
 
 export default async function TopicPage({ params }: TopicPageProps) {
+  await connection();
   const { slug } = await params;
-  const briefing = getPublishedBriefingBySlug(slug);
+  const briefing = await createPublicCatalogueFromEnvironment().findPublishedBriefingBySlug(slug);
 
   if (!briefing) {
     notFound();

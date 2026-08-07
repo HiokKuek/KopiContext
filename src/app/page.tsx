@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
+import { connection } from "next/server";
+import { createPublicCatalogueFromEnvironment } from "@/platform/web/public-catalogue";
 
-const featuredBriefing = getPublishedBriefingBySlug("how-singapores-government-works");
-
-export default function HomePage() {
+export default async function HomePage() {
+  // Next 16's connection() keeps server-only runtime configuration and the
+  // private API call out of build-time prerendering and the browser bundle.
+  await connection();
+  const featuredBriefing = await createPublicCatalogueFromEnvironment().findPublishedBriefingBySlug(
+    "how-singapores-government-works",
+  );
   return (
     <>
       <header className="site-header">

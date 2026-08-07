@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   getPublishedBriefingBySlug,
+  listPublishedBriefings,
   type BriefingVisualExplainer,
 } from "./published-briefings";
 
@@ -85,6 +86,12 @@ describe("getPublishedBriefingBySlug", () => {
 
   it("does not return an unpublished Briefing", () => {
     expect(getPublishedBriefingBySlug("draft-government-briefing")).toBeUndefined();
+  });
+
+  it("lists only published fixtures for the explicit local-development catalogue", () => {
+    expect(listPublishedBriefings()).toEqual([
+      expect.objectContaining({ slug: "how-singapores-government-works", status: "published" }),
+    ]);
   });
 
   it("returns no result for an unknown slug", () => {

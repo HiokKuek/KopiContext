@@ -370,3 +370,8 @@ const briefings: readonly PublishedBriefing[] = [
 export function getPublishedBriefingBySlug(slug: string): PublishedBriefing | undefined {
   return briefings.find((briefing) => briefing.slug === slug && briefing.status === "published");
 }
+
+/** Explicit fixture catalogue for local-development composition only. */
+export function listPublishedBriefings(): ReadonlyArray<PublishedBriefing> {
+  return briefings.filter((briefing) => briefing.status === "published");
+}

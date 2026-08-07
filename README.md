@@ -43,6 +43,10 @@ Current code is deliberately small:
 - `src/platform/web/` owns server-only BFF adapters. The Topic-request route
   validates a single Topic again and forwards it through the authenticated
   private API client; it retains no reader identity or browser metadata.
+- Public reader routes use the same server-only private API client in
+  production. `PUBLIC_CATALOGUE_SLUGS` is the deliberately small published
+  catalogue manifest used for reader search; checked-in Briefing fixtures are
+  available only with `PUBLIC_CATALOGUE_RUNTIME_MODE=local-development`.
   The editor queue follows the same server-only seam and reports a truthful
   unavailable state until its private read endpoint is composed. Editor
   Briefing review and transition actions are also server-only BFFs: each
@@ -61,7 +65,17 @@ pnpm install
 pnpm dev
 ```
 
+For local reader work, copy the explicit fixture setting from `.env.example`:
+
+```sh
+PUBLIC_CATALOGUE_RUNTIME_MODE=local-development pnpm dev
+```
+
 Open `http://localhost:3000/topics/how-singapores-government-works`.
+
+Deployed reader rendering fails closed unless these server-only values are
+configured: `PUBLIC_CATALOGUE_SLUGS`, `PRIVATE_API_BASE_URL`, and
+`PRIVATE_API_SERVICE_CREDENTIAL`. Do not prefix them with `NEXT_PUBLIC_`.
 
 To run the private API locally, follow [its runbook](docs/runtime/private-api.md).
 
