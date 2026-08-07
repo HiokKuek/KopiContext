@@ -23,11 +23,16 @@ import {
 import { registerTopicRequestRoute, type TopicRequestCommand } from "./topic-request-route";
 import { registerEditorialReadRoutes } from "./editorial-read-routes";
 import { registerSourceSubmissionReadRoutes } from "./source-submission-read-routes";
+import {
+  registerPreparedProposalAcceptanceRoute,
+  type PreparedProposalAcceptanceCommand,
+} from "./prepared-proposal-acceptance-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
+  preparedProposalAcceptances?: PreparedProposalAcceptanceCommand;
   editorialReadModels?: EditorialReadRepository;
   sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
@@ -131,6 +136,27 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
           422,
           "editorial_transition_rejected",
           "The requested editorial transition cannot be completed.",
+        ),
+    });
+  }
+
+  if (dependencies.preparedProposalAcceptances) {
+    registerPreparedProposalAcceptanceRoute(app, {
+      preparedProposalAcceptances: dependencies.preparedProposalAcceptances,
+      now,
+      invalidRequest: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The prepared proposal does not exist."),
+      conflict: () =>
+        new ApiError(
+          409,
+          "conflict",
+          "The proposal changed or this acceptance conflicts with existing editorial work.",
+        ),
+      rejected: () =>
+        new ApiError(
+          422,
+          "validation_failed",
+          "The prepared proposal cannot be accepted.",
         ),
     });
   }

@@ -110,6 +110,57 @@ call these routes; it must never forward this credential to a browser.
 
 ## Source-submission command
 
+### Accept a prepared classification and draft (Phase A)
+
+Production composition exposes the private command
+`POST /v1/editorial/source-submissions/:submissionId/acceptance`. It is the
+first, deliberately narrow proposal-decision command: it creates a **new**
+Draft Topic, Briefing, agent-origin immutable revision, and append-only
+proposal-decision record from one prepared Source Submission. It cannot accept
+a Source or Claim, alter an existing Topic, target an existing Briefing, or
+publish content.
+
+The Vercel BFF constructs this request only after verifying the editor session.
+`actorId` is derived server-side from that session; it must never come from a
+form field or browser-controlled payload. As with every private endpoint, the
+browser never receives the private API credential.
+
+```json
+{
+  "idempotencyKey": "proposal-acceptance:government:v1",
+  "actorId": "google:opaque-editor-id",
+  "expectedOutputFingerprint": "sha256:...64 lowercase hexadecimal characters...",
+  "topic": {
+    "slug": "how-singapores-government-works",
+    "description": "A friendly introduction to Singapore's system of government."
+  }
+}
+```
+
+The Source Submission ID is a UUID route parameter. The route accepts exactly
+the fields above, timestamps the decision in the private runtime, and validates
+the opaque idempotency key, SHA-256 proposal fingerprint, Topic slug, and
+bounded text before it invokes the application command.
+
+A new decision returns `201 Created`; a replay of the same accepted command
+returns `200 OK` with the identical durable IDs:
+
+```json
+{
+  "kind": "created",
+  "topicId": "...",
+  "briefingId": "...",
+  "revisionId": "...",
+  "decisionId": "..."
+}
+```
+
+Stale output, an already-used Topic slug, or an idempotency-key mismatch
+returns the stable `409 conflict` envelope. A missing proposal returns `404
+not_found`; a terminal/non-ready proposal returns `422 validation_failed`.
+The API does not expose raw preparation output or persistence details in those
+errors. This route is absent in restricted local-development fixture mode.
+
 ### Review prepared proposals
 
 `GET /v1/editorial/source-submissions/:submissionId` is a private,

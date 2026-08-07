@@ -3,6 +3,7 @@ import type { FastifyInstance } from "fastify";
 import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
 import { createTopicRequestCommand } from "@/modules/discovery/topic-request-command";
 import { createEditorialWorkflowCommand } from "@/modules/editorial/editorial-workflow-command";
+import { createAcceptPreparedProposalCommand } from "@/modules/editorial/accept-prepared-proposal-command";
 import { createSourceSubmissionIntakeCommand } from "@/modules/preparation/source-submission-intake";
 import {
   DrizzleEditorialRepository,
@@ -13,6 +14,7 @@ import { DrizzleTopicRequestDemandRepository } from "@/platform/persistence/topi
 import { DrizzleAnonymousAnalyticsRepository } from "@/platform/persistence/anonymous-analytics-repository";
 import { DrizzleSourceSubmissionIntakeRepository } from "@/platform/persistence/source-submission-intake-repository";
 import { DrizzleSourceSubmissionReadRepository } from "@/platform/persistence/source-submission-read-repository";
+import { DrizzleAcceptPreparedProposalRepository } from "@/platform/persistence/accept-prepared-proposal-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -63,6 +65,7 @@ export function composePrivateApiRuntime(
     configuration.database,
   );
   const editorialRepository = new DrizzleEditorialRepository(persistence.db);
+  const preparedProposalAcceptances = new DrizzleAcceptPreparedProposalRepository(persistence.db);
   const topicRequestDemands = new DrizzleTopicRequestDemandRepository(persistence.db);
   const sourceSubmissionIntake = new DrizzleSourceSubmissionIntakeRepository(persistence.db);
   const anonymousAnalyticsEvents = new DrizzleAnonymousAnalyticsRepository(persistence.db);
@@ -70,6 +73,7 @@ export function composePrivateApiRuntime(
     serviceAuthenticator: authenticator,
     publicCatalogue: new DrizzlePublishedCatalogueRepository(persistence.db),
     editorialBriefingTransitions: createEditorialWorkflowCommand(editorialRepository),
+    preparedProposalAcceptances: createAcceptPreparedProposalCommand(preparedProposalAcceptances),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),

@@ -58,6 +58,16 @@ describe("private API runtime composition", () => {
     });
     expect(sourceSubmission.statusCode).toBe(400);
 
+    // Prepared-proposal acceptance is production-only. This malformed command
+    // proves the authenticated route is composed without invoking fake storage.
+    const proposalAcceptance = await runtime.app.inject({
+      method: "POST",
+      url: "/v1/editorial/source-submissions/123e4567-e89b-12d3-a456-426614174000/acceptance",
+      headers: { authorization: `Bearer ${serviceCredential}` },
+      payload: {},
+    });
+    expect(proposalAcceptance.statusCode).toBe(400);
+
     // The query exists in production composition, and the shared credential
     // gate is applied before any substitute persistence object is touched.
     const editorQueue = await runtime.app.inject({
