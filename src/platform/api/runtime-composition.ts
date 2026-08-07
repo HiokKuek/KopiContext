@@ -1,11 +1,13 @@
 import type { FastifyInstance } from "fastify";
 
 import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
+import { createTopicRequestCommand } from "@/modules/discovery/topic-request-command";
 import { createEditorialWorkflowCommand } from "@/modules/editorial/editorial-workflow-command";
 import {
   DrizzleEditorialRepository,
   DrizzlePublishedCatalogueRepository,
 } from "@/platform/persistence/content-repositories";
+import { DrizzleTopicRequestDemandRepository } from "@/platform/persistence/topic-request-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -56,10 +58,12 @@ export function composePrivateApiRuntime(
     configuration.database,
   );
   const editorialRepository = new DrizzleEditorialRepository(persistence.db);
+  const topicRequestDemands = new DrizzleTopicRequestDemandRepository(persistence.db);
   const app = buildPrivateApi({
     serviceAuthenticator: authenticator,
     publicCatalogue: new DrizzlePublishedCatalogueRepository(persistence.db),
     editorialBriefingTransitions: createEditorialWorkflowCommand(editorialRepository),
+    topicRequests: createTopicRequestCommand(topicRequestDemands),
   });
 
   return {

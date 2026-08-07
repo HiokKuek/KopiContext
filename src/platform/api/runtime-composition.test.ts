@@ -23,6 +23,16 @@ describe("private API runtime composition", () => {
     });
     expect(health.statusCode).toBe(200);
 
+    // This fails before persistence is touched, but proves the production
+    // composition registers the private Topic-request command route.
+    const topicRequest = await runtime.app.inject({
+      method: "POST",
+      url: "/v1/discovery/topic-requests",
+      headers: { authorization: `Bearer ${serviceCredential}` },
+      payload: {},
+    });
+    expect(topicRequest.statusCode).toBe(400);
+
     await runtime.close();
     expect(close).toHaveBeenCalledOnce();
   });

@@ -82,6 +82,29 @@ export const topics = pgTable(
 );
 
 /**
+ * Anonymous requests are folded into a compact discovery aggregate. There is
+ * intentionally no request row, reader/session identifier, header, network
+ * address, user agent, or free-form context to turn this into a profile.
+ */
+export const topicRequestDemands = pgTable(
+  "topic_request_demands",
+  {
+    requestedTopic: text("requested_topic").primaryKey(),
+    requestCount: integer("request_count").default(0).notNull(),
+    firstRequestedAt: timestamp("first_requested_at", { withTimezone: true, mode: "date" }).notNull(),
+    lastRequestedAt: timestamp("last_requested_at", { withTimezone: true, mode: "date" }).notNull(),
+  },
+  (table) => [
+    index("topic_request_demands_last_requested_idx").on(table.lastRequestedAt),
+    check("topic_request_demands_count_positive", sql`${table.requestCount} > 0`),
+    check(
+      "topic_request_demands_timestamp_order",
+      sql`${table.firstRequestedAt} <= ${table.lastRequestedAt}`,
+    ),
+  ],
+);
+
+/**
  * The editorial aggregate for an evergreen explanation. The current state is
  * stored here; immutable Briefing revisions carry the actual draft content.
  */
@@ -301,6 +324,8 @@ export const editorialAuditRecords = pgTable(
 
 export type TopicRow = typeof topics.$inferSelect;
 export type NewTopicRow = typeof topics.$inferInsert;
+export type TopicRequestDemandRow = typeof topicRequestDemands.$inferSelect;
+export type NewTopicRequestDemandRow = typeof topicRequestDemands.$inferInsert;
 export type BriefingRow = typeof briefings.$inferSelect;
 export type NewBriefingRow = typeof briefings.$inferInsert;
 export type BriefingRevisionRow = typeof briefingRevisions.$inferSelect;

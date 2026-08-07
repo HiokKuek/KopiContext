@@ -19,6 +19,8 @@ development mode.
 - `DrizzlePublishedCatalogueRepository` for public Published Briefings;
 - `DrizzleEditorialRepository` and the Editorial Workflow command for
   authenticated editorial transitions; and
+- `DrizzleTopicRequestDemandRepository` and the aggregate-only Topic-request
+  command for authenticated BFF handoffs; and
 - a Postgres pool that is closed alongside Fastify during shutdown.
 
 Run that production-shaped composition only with an isolated local, staging,
@@ -130,6 +132,24 @@ placeholder workflow.
 
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.
+
+## Anonymous Topic-request handoff
+
+Production composition also exposes `POST /v1/discovery/topic-requests` to a
+trusted Vercel BFF using the service credential. It accepts exactly this body:
+
+```json
+{ "requestedTopic": "How does CPF work?" }
+```
+
+The API normalises and validates the Topic again, rejects additional fields,
+and folds accepted requests into the durable `topic_request_demands` aggregate.
+That table has only the requested Topic, demand count, and first/last accepted
+timestamps—no per-reader rows, headers, IP addresses, sessions, identities,
+user agents, or free-form messages. Demand can inform editorial discovery but
+cannot create a Topic or publish a Briefing. The public same-origin BFF route
+remains a separate web-composition step; never expose this private endpoint or
+its credential to a browser.
 
 ## Anonymous analytics collection
 

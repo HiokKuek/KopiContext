@@ -22,6 +22,10 @@ boundaries in `CONTEXT.md`:
   supports the Claim.
 - `editorial_audit_records` is append-only transition history. The editorial
   application writes it atomically with the Briefing status it evaluates.
+- `topic_request_demands` is an aggregate-only editor discovery queue. It
+  stores a normalised requested Topic, count, and first/last acceptance times;
+  it must never become a per-reader request log or retain network, session,
+  identity, device, or free-form fields.
 
 The schema protects vocabulary, identifiers, relationships, merge boundaries,
 confidence ranges, and complete agent-generation provenance. It intentionally

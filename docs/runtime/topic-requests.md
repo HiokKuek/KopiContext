@@ -27,11 +27,34 @@ private API. Its server-side composition must:
 4. return `202` with `{ "status": "received" }` only once the private
    discovery command has accepted the request.
 
-The corresponding private application API command and durable discovery queue
-are not composed yet. Until that dependency exists, the form clearly reports
-that requests are temporarily unavailable rather than implying the editor has
-received one. The endpoint must not retain request headers, raw IP addresses,
-or arbitrary browser metadata.
+The private application API accepts the handoff at:
+
+```text
+POST /v1/discovery/topic-requests
+Authorization: Bearer PRIVATE_API_SERVICE_CREDENTIAL
+Content-Type: application/json
+
+{ "requestedTopic": "How does CPF work?" }
+```
+
+This is BFF-only: a browser must not possess the private credential or call
+this endpoint directly. The endpoint accepts exactly one field, runs the same
+validation again, and returns `202 { "status": "received" }` only after the
+discovery command has accepted it. Extra fields (including headers mirrored
+into a body, raw IP data, sessions, and browser metadata) are rejected rather
+than silently ignored.
+
+The command folds each accepted request into `topic_request_demands`, a durable
+editor discovery aggregate with only `requested_topic`, `request_count`, and
+first/last acceptance timestamps. It does not create one record per reader or
+store an idempotency key, identity, header, IP address, device value, or
+free-form message. The editor can use the aggregate as demand evidence, but it
+does not create a Topic or publish a Briefing automatically.
+
+The private API production composition supplies this command and repository.
+The public same-origin BFF route is still a separate web-composition task, so
+the search form must remain honest about availability until that route is
+connected and tested.
 
 ## Domain contract
 

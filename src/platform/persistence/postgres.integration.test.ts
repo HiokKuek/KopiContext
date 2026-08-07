@@ -1,13 +1,16 @@
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createEditorialWorkflowCommand } from "@/modules/editorial/editorial-workflow-command";
+import { createTopicRequestCommand } from "@/modules/discovery/topic-request-command";
 
 import {
   DrizzleEditorialRepository,
   DrizzlePublishedCatalogueRepository,
 } from "./content-repositories";
+import { DrizzleTopicRequestDemandRepository } from "./topic-request-repository";
 import { createPostgresPersistence, type PostgresPersistence } from "./postgres";
 import {
   acceptedSources,
@@ -16,6 +19,7 @@ import {
   claimSupports,
   claims,
   topics,
+  topicRequestDemands,
 } from "./schema";
 import { testPostgresConnectionConfigFromEnvironment } from "./test-database";
 
@@ -120,5 +124,28 @@ describe("Postgres editorial workflow", () => {
       ],
     });
     await expect(editorial.listAuditRecords(briefing.id)).resolves.toHaveLength(4);
+  });
+
+  it("folds accepted Topic requests into one privacy-bounded demand aggregate", async () => {
+    const requestedTopic = `Postgres discovery ${randomUUID()}`;
+    const repository = new DrizzleTopicRequestDemandRepository(persistence.db);
+    const command = createTopicRequestCommand(repository, {
+      now: () => new Date("2026-08-07T12:00:00.000Z"),
+    });
+
+    await command.submit({ requestedTopic });
+    await command.submit({ requestedTopic });
+
+    await expect(repository.listDemand()).resolves.toContainEqual({
+      requestedTopic,
+      requestCount: 2,
+      firstRequestedAt: "2026-08-07T12:00:00.000Z",
+      lastRequestedAt: "2026-08-07T12:00:00.000Z",
+    });
+    const rows = await persistence.db
+      .select()
+      .from(topicRequestDemands)
+      .where(eq(topicRequestDemands.requestedTopic, requestedTopic));
+    expect(rows).toHaveLength(1);
   });
 });

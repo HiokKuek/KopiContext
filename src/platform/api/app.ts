@@ -18,6 +18,7 @@ import {
   registerAnonymousAnalyticsEventRoute,
   type AnonymousAnalyticsEventCommand,
 } from "./analytics-event-route";
+import { registerTopicRequestRoute, type TopicRequestCommand } from "./topic-request-route";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
@@ -25,6 +26,7 @@ export type PrivateApiDependencies = Readonly<{
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
   sourceSubmissions?: SourceSubmissionCommand;
   anonymousAnalyticsEvents?: AnonymousAnalyticsEventCommand;
+  topicRequests?: TopicRequestCommand;
   now?: () => Date;
 }>;
 
@@ -129,6 +131,10 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
 
   if (dependencies.sourceSubmissions) {
     registerSourceSubmissionRoute(app, dependencies.sourceSubmissions);
+  }
+
+  if (dependencies.topicRequests) {
+    registerTopicRequestRoute(app, dependencies.topicRequests);
   }
 
   app.setNotFoundHandler((_request, reply) => {

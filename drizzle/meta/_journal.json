@@ -15,6 +15,13 @@
       "when": 1786071136451,
       "tag": "0001_content-editorial-schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786073700258,
+      "tag": "0002_topic-request-demand",
+      "breakpoints": true
     }
   ]
 }
