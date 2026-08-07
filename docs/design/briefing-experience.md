@@ -124,22 +124,59 @@ sections disappear cleanly; no empty placeholders reach a reader.
    This is the thesis, not promotional copy.
 3. **30-second overview** — a short, self-contained orientation. It answers
    what the thing is, who is involved, and why it matters.
-4. **Conversation path** — anchors the reader through the five-minute
+4. **Mental-model orientation** — required before detailed explanation when a
+   Topic is fundamentally a system, institution, or process. It converts the
+   overview into a reusable map: the important parts, what each does, and how
+   they relate. It is a semantic HTML/CSS diagram with a text introduction,
+   not custom artwork or a canvas-only illustration. For topics without this
+   kind of structure, it is omitted rather than simulated.
+5. **Conversation path** — anchors the reader through the five-minute
    explanation, why people care, key terms, Entities, debates, Singapore/SEA
    angle where relevant, questions to ask, and mistakes to avoid.
-5. **Five-minute explanation** — the durable core, divided by meaningful
+6. **Five-minute explanation** — the durable core, divided by meaningful
    headings. Claims expose their support without interrupting every sentence.
-6. **Context sections** — why people care; key terms; relevant Entities;
+7. **Context sections** — why people care; key terms; relevant Entities;
    debates; and the Singapore/SEA angle when relevant. These can use compact
    definitions or relationship lists, but do not become dashboard widgets.
-7. **Participate** — questions to ask and mistakes to avoid. This closes the
+8. **Participate** — questions to ask and mistakes to avoid. This closes the
    loop from learning to conversation.
-8. **Optional depth** — deeper background and Related Topics.
-9. **Current Updates** — visually and semantically separate, dated items below
+9. **Optional depth** — deeper background and Related Topics.
+10. **Current Updates** — visually and semantically separate, dated items below
    the evergreen Briefing. Each identifies its date and relationship to the
    Topic; it must never be interleaved into the core explanation.
-10. **Trust footer** — Sources, Claim-support access, reviewed/published
+11. **Trust footer** — Sources, Claim-support access, reviewed/published
     dates, and a discreet way to request a Topic or report a concern.
+
+### Mental-model pattern
+
+Use this pattern when a reader needs to understand relationships before they
+can make sense of definitions. Its job is to answer “what is the map?” before
+the page asks “what does this term mean?” A model consists of four parts, used
+only where they clarify the Topic:
+
+1. **Orientation statement and visual** — one plain-language sentence followed
+   by a labelled relationship diagram. The diagram has a meaningful heading,
+   represents each major part as real text, and gives every connector a
+   written relationship. A screen reader must receive the same model without
+   interpreting layout or arrows.
+2. **Part cards** — three or more peer components can appear as cards when
+   their responsibilities are genuinely distinct. Every card uses the same
+   order: what it does, who/what belongs to it, one familiar example, then a
+   descriptive link to the deeper section. Do not make cards merely a visual
+   restatement of nearby paragraphs.
+3. **Role comparison** — use a labelled table for roles readers commonly
+   confuse. Keep rows parallel and answer the practical distinction first.
+   Tables must remain tables on wide screens; on narrow screens they may become
+   labelled comparison blocks rather than forcing horizontal page scrolling.
+4. **Practical flow** — show one ordinary end-to-end scenario in ordered,
+   numbered prose. A connected visual may reinforce the sequence, but the
+   text itself must communicate the complete flow. Use it to demonstrate how
+   the parts cooperate, not to claim that every real case follows one path.
+
+The opening of a mental-model Briefing should let a first-time reader name the
+main parts, place the central entities within them, distinguish the roles most
+likely to be conflated, and retell one practical example. If it cannot do
+this, simplify the model before adding more detail.
 
 ## Conversation path
 
@@ -175,6 +212,8 @@ Narrow (default)
 │ Header / search               │
 │ Topic proposition             │
 │ 30-second overview            │
+│ Mental-model diagram          │
+│ Part cards (stacked)          │
 │ [Orient][Understand][Weigh] → │
 │ Reading column                │
 │ Current Updates (separate)    │
@@ -186,6 +225,8 @@ Wide (room for a second column)
 │ Header / search                                       │
 │                  Topic proposition                    │
 │ path rail          30-second overview                 │
+│                    mental-model diagram                │
+│                    part cards / role comparison        │
 │ Orient             reading column                     │
 │ Understand         Current Updates (separate)         │
 │ Weigh              Sources / freshness                │
@@ -203,6 +244,10 @@ Wide (room for a second column)
   trust metadata. The content order in the DOM remains the reading order.
 - **Large text and zoom:** at 200% browser zoom, the page returns naturally to
   a one-column flow rather than clipping the rail or controls.
+- **Mental-model components:** diagrams use grid/flex layout rather than
+  absolute positioning; their components stack in the explanatory DOM order.
+  Visual connectors are supplementary and have text alternatives. Comparison
+  tables must not require horizontal page scrolling at narrow widths.
 
 ## Component and state guidance
 
