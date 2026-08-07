@@ -17,6 +17,11 @@ boundaries in `CONTEXT.md`:
 - `source_submissions` preserves supplied material and processing provenance.
   It is never evidence by itself. `accepted_sources` records the editor's
   distinct acceptance decision and durable source metadata.
+  A preparation command has a unique durable idempotency key, a terminal
+  preparation result, and (when applicable) its duplicate target. Retrieval
+  provenance, processing history, model provenance, candidate claims, and the
+  draft proposal remain on this aggregate. A duplicate is only a linked review
+  outcome; it does not merge, accept, or discard the underlying submission.
 - `claims` belong to a specific Briefing revision. `claim_supports` is the only
   Claim-to-Accepted-Source relationship and records where and how a Source
   supports the Claim.
@@ -33,6 +38,21 @@ does not duplicate application rules such as “only the editor may publish”:
 those rules require authenticated actor policy and stay in the editorial
 application seam. Never bypass that seam by writing a publication status
 directly through a table adapter.
+
+## Source-preparation repository
+
+`DrizzleSourcePreparationRepository` is the private worker's durable adapter
+for `prepareSourceSubmission`. It provides both the preparation result store
+and duplicate-detection port. Its unique idempotency key returns the first
+completed terminal outcome if concurrent workers race, rather than overwriting
+it. Duplicate detection compares the canonical identifier or content
+fingerprint only against earlier prepared or escalated proposals.
+
+The adapter does not write `accepted_sources`, `claims`, `briefings`,
+`briefing_revisions`, `topics`, or editorial audit records. A provider/worker
+composition can therefore retrieve and prepare material safely, but an editor
+must still accept Sources, verify Claims, and approve publication through
+their respective application commands.
 
 ## Run a migration
 

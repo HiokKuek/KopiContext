@@ -1,5 +1,6 @@
 import {
   check,
+  type AnyPgColumn,
   index,
   integer,
   jsonb,
@@ -39,6 +40,12 @@ export const sourceSubmissionStatus = pgEnum("source_submission_status", [
   "ready-for-review",
   "escalated",
   "rejected",
+]);
+export const sourcePreparationResultState = pgEnum("source_preparation_result_state", [
+  "prepared",
+  "needs-review",
+  "duplicate",
+  "failed",
 ]);
 export const briefingRevisionOrigin = pgEnum("briefing_revision_origin", ["human", "agent"]);
 export const claimStatus = pgEnum("claim_status", ["candidate", "verified", "rejected"]);
@@ -177,9 +184,12 @@ export const sourceSubmissions = pgTable(
   "source_submissions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    /** Durable command key; the preparation worker never repeats a completed command. */
+    idempotencyKey: text("idempotency_key").unique(),
     kind: sourceSubmissionKind("kind").notNull(),
     originalIdentifier: text("original_identifier").notNull(),
     originalUrl: text("original_url"),
+    canonicalIdentifier: text("canonical_identifier"),
     contentFingerprint: text("content_fingerprint"),
     submittedBy: text("submitted_by").notNull(),
     submittedAt: timestamp("submitted_at", { withTimezone: true, mode: "date" })
@@ -190,6 +200,12 @@ export const sourceSubmissions = pgTable(
     processingStatus: sourceSubmissionStatus("processing_status")
       .default("submitted")
       .notNull(),
+    preparationResultState: sourcePreparationResultState("preparation_result_state"),
+    preparationFailure: text("preparation_failure"),
+    duplicateOfSubmissionId: uuid("duplicate_of_submission_id").references((): AnyPgColumn => sourceSubmissions.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
     proposedTopicId: uuid("proposed_topic_id").references(() => topics.id, {
       onDelete: "set null",
       onUpdate: "cascade",
@@ -210,6 +226,8 @@ export const sourceSubmissions = pgTable(
   (table) => [
     index("source_submissions_status_idx").on(table.processingStatus),
     index("source_submissions_fingerprint_idx").on(table.contentFingerprint),
+    index("source_submissions_canonical_identifier_idx").on(table.canonicalIdentifier),
+    index("source_submissions_duplicate_of_idx").on(table.duplicateOfSubmissionId),
     check(
       "source_submissions_confidence_in_range",
       sql`(${table.classificationConfidence} IS NULL OR (${table.classificationConfidence} >= 0 AND ${table.classificationConfidence} <= 1))`,
@@ -217,6 +235,14 @@ export const sourceSubmissions = pgTable(
     check(
       "source_submissions_processing_provenance_complete",
       sql`(${table.processorProvider} IS NULL OR (${table.processorModel} IS NOT NULL AND ${table.promptVersion} IS NOT NULL AND ${table.processorInputProvenance} IS NOT NULL AND ${table.processorOutput} IS NOT NULL AND ${table.processedAt} IS NOT NULL))`,
+    ),
+    check(
+      "source_submissions_terminal_result_failure_pair",
+      sql`(${table.preparationResultState} <> 'failed' OR ${table.preparationFailure} IS NOT NULL)`,
+    ),
+    check(
+      "source_submissions_duplicate_target_required",
+      sql`(${table.preparationResultState} <> 'duplicate' OR ${table.duplicateOfSubmissionId} IS NOT NULL)`,
     ),
   ],
 );

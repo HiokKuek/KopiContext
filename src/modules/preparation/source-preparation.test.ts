@@ -63,9 +63,9 @@ function createDependencies(
   overrides: Partial<PrepareSourceSubmissionDependencies> = {},
 ): PrepareSourceSubmissionDependencies & { store: ReturnType<typeof createStore> } {
   const store = createStore();
-  const { store: _ignoredStore, ...adapterOverrides } = overrides;
+  const { store: suppliedStore, ...adapterOverrides } = overrides;
   return {
-    store,
+    store: suppliedStore ?? store,
     clock: { now: () => "2026-08-07T10:00:00.000Z" },
     retrieval: {
       async retrieve() {
@@ -80,7 +80,7 @@ function createDependencies(
     duplicates: { async findDuplicate() { return undefined; } },
     ai: { async prepare() { return proposal; } },
     ...adapterOverrides,
-  };
+  } as PrepareSourceSubmissionDependencies & { store: ReturnType<typeof createStore> };
 }
 
 describe("prepareSourceSubmission", () => {
@@ -140,6 +140,30 @@ describe("prepareSourceSubmission", () => {
     expect(retrievalCalls).toBe(1);
     expect(aiCalls).toBe(1);
     expect(dependencies.store.saved).toHaveLength(1);
+  });
+
+  it("returns the already durable outcome when another worker wins the save race", async () => {
+    const durableOutcome: SourcePreparationResult = {
+      state: "failed",
+      idempotencyKey: "racing-key",
+      submission,
+      history: [{ stage: "failed", occurredAt: "2026-08-07T10:00:00.000Z", detail: "Saved by another worker." }],
+      failure: "preparation-failed",
+    };
+    const dependencies = createDependencies({
+      store: {
+        async findByIdempotencyKey() {
+          return undefined;
+        },
+        async save() {
+          return durableOutcome;
+        },
+      },
+    });
+
+    await expect(
+      prepareSourceSubmission({ idempotencyKey: "racing-key", submission }, dependencies),
+    ).resolves.toEqual(durableOutcome);
   });
 
   it("deduplicates before calling AI and retains the submitted material's provenance", async () => {

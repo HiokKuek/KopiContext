@@ -133,7 +133,11 @@ export type PreparationAiAdapter = {
 
 export type SourcePreparationStore = {
   findByIdempotencyKey(idempotencyKey: string): Promise<SourcePreparationResult | undefined>;
-  save(result: SourcePreparationResult): Promise<void>;
+  /**
+   * Persists one terminal outcome. A durable store may return an already
+   * persisted outcome when a concurrent command won the idempotency race.
+   */
+  save(result: SourcePreparationResult): Promise<void | SourcePreparationResult>;
 };
 
 export type Clock = { now(): string };
@@ -192,8 +196,7 @@ async function saveAndReturn(
   store: SourcePreparationStore,
   result: SourcePreparationResult,
 ): Promise<SourcePreparationResult> {
-  await store.save(result);
-  return result;
+  return (await store.save(result)) ?? result;
 }
 
 /**
