@@ -2,6 +2,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import type { PublishedBriefing } from "@/modules/content/published-briefings";
 import type { EditorialReadRepository } from "@/modules/editorial/editorial-read-model";
+import type { SourceSubmissionReadRepository } from "@/modules/preparation/source-submission-read-model";
 
 import {
   type PrivateServiceIdentity,
@@ -21,12 +22,14 @@ import {
 } from "./analytics-event-route";
 import { registerTopicRequestRoute, type TopicRequestCommand } from "./topic-request-route";
 import { registerEditorialReadRoutes } from "./editorial-read-routes";
+import { registerSourceSubmissionReadRoutes } from "./source-submission-read-routes";
 
 export type PrivateApiDependencies = Readonly<{
   serviceAuthenticator: ServiceCredentialAuthenticator;
   publicCatalogue: PublicCatalogueQuery;
   editorialBriefingTransitions?: EditorialBriefingTransitionCommand;
   editorialReadModels?: EditorialReadRepository;
+  sourceSubmissionReadModels?: SourceSubmissionReadRepository;
   sourceSubmissions?: SourceSubmissionCommand;
   anonymousAnalyticsEvents?: AnonymousAnalyticsEventCommand;
   topicRequests?: TopicRequestCommand;
@@ -137,6 +140,12 @@ export function buildPrivateApi(dependencies: PrivateApiDependencies): FastifyIn
       editorialReadModels: dependencies.editorialReadModels,
       invalidRequest: (message) => new ApiError(400, "invalid_request", message),
       notFound: () => new ApiError(404, "not_found", "The requested Briefing does not exist."),
+    });
+  }
+  if (dependencies.sourceSubmissionReadModels) {
+    registerSourceSubmissionReadRoutes(app, dependencies.sourceSubmissionReadModels, {
+      invalid: (message) => new ApiError(400, "invalid_request", message),
+      notFound: () => new ApiError(404, "not_found", "The requested Source Submission does not exist."),
     });
   }
 

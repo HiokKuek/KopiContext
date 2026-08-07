@@ -11,6 +11,7 @@ import {
 import { DrizzleEditorialReadRepository } from "@/platform/persistence/editorial-read-repository";
 import { DrizzleTopicRequestDemandRepository } from "@/platform/persistence/topic-request-repository";
 import { DrizzleSourceSubmissionIntakeRepository } from "@/platform/persistence/source-submission-intake-repository";
+import { DrizzleSourceSubmissionReadRepository } from "@/platform/persistence/source-submission-read-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -68,6 +69,7 @@ export function composePrivateApiRuntime(
     publicCatalogue: new DrizzlePublishedCatalogueRepository(persistence.db),
     editorialBriefingTransitions: createEditorialWorkflowCommand(editorialRepository),
     sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
+    sourceSubmissionReadModels: new DrizzleSourceSubmissionReadRepository(persistence.db),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
     topicRequests: createTopicRequestCommand(topicRequestDemands),
   });
