@@ -228,6 +228,36 @@ export const briefingRevisions = pgTable(
 );
 
 /**
+ * Durable, append-only receipts for editor-authored revision creation. This
+ * makes retries safe without treating a human revision as agent output or as
+ * a workflow state transition.
+ */
+export const humanRevisionCreationRecords = pgTable(
+  "human_revision_creation_records",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    briefingId: uuid("briefing_id")
+      .notNull()
+      .references(() => briefings.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    expectedRevisionId: uuid("expected_revision_id")
+      .notNull()
+      .references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    briefingRevisionId: uuid("briefing_revision_id")
+      .notNull()
+      .references(() => briefingRevisions.id, { onDelete: "restrict", onUpdate: "cascade" }),
+    actorId: text("actor_id").notNull(),
+    note: text("note"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(),
+    createdAt,
+  },
+  (table) => [
+    index("human_revision_creation_records_briefing_occurred_idx").on(table.briefingId, table.occurredAt),
+    check("human_revision_creation_records_actor_not_empty", sql`length(${table.actorId}) > 0`),
+  ],
+);
+
+/**
  * Material awaiting assessment. It preserves original material and processing
  * provenance but cannot support a Claim unless it becomes an Accepted Source.
  */
@@ -465,6 +495,8 @@ export type BriefingRow = typeof briefings.$inferSelect;
 export type NewBriefingRow = typeof briefings.$inferInsert;
 export type BriefingRevisionRow = typeof briefingRevisions.$inferSelect;
 export type NewBriefingRevisionRow = typeof briefingRevisions.$inferInsert;
+export type HumanRevisionCreationRecordRow = typeof humanRevisionCreationRecords.$inferSelect;
+export type NewHumanRevisionCreationRecordRow = typeof humanRevisionCreationRecords.$inferInsert;
 export type SourceSubmissionRow = typeof sourceSubmissions.$inferSelect;
 export type NewSourceSubmissionRow = typeof sourceSubmissions.$inferInsert;
 export type AcceptedSourceRow = typeof acceptedSources.$inferSelect;

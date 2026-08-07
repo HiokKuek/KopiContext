@@ -1,0 +1,18 @@
+CREATE TABLE "human_revision_creation_records" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"idempotency_key" text NOT NULL,
+	"briefing_id" uuid NOT NULL,
+	"expected_revision_id" uuid NOT NULL,
+	"briefing_revision_id" uuid NOT NULL,
+	"actor_id" text NOT NULL,
+	"note" text,
+	"occurred_at" timestamp with time zone NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "human_revision_creation_records_idempotency_key_unique" UNIQUE("idempotency_key"),
+	CONSTRAINT "human_revision_creation_records_actor_not_empty" CHECK (length("human_revision_creation_records"."actor_id") > 0)
+);
+--> statement-breakpoint
+ALTER TABLE "human_revision_creation_records" ADD CONSTRAINT "human_revision_creation_records_briefing_id_briefings_id_fk" FOREIGN KEY ("briefing_id") REFERENCES "public"."briefings"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "human_revision_creation_records" ADD CONSTRAINT "human_revision_creation_records_expected_revision_id_briefing_revisions_id_fk" FOREIGN KEY ("expected_revision_id") REFERENCES "public"."briefing_revisions"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
+ALTER TABLE "human_revision_creation_records" ADD CONSTRAINT "human_revision_creation_records_briefing_revision_id_briefing_revisions_id_fk" FOREIGN KEY ("briefing_revision_id") REFERENCES "public"."briefing_revisions"("id") ON DELETE restrict ON UPDATE cascade;--> statement-breakpoint
+CREATE INDEX "human_revision_creation_records_briefing_occurred_idx" ON "human_revision_creation_records" USING btree ("briefing_id","occurred_at");

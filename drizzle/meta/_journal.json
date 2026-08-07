@@ -71,6 +71,13 @@
       "when": 1786077332676,
       "tag": "0009_candidate-claim-acceptance",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786079011124,
+      "tag": "0010_adorable_boomer",
+      "breakpoints": true
     }
   ]
 }

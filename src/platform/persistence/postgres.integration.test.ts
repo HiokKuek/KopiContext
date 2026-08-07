@@ -10,6 +10,7 @@ import {
 } from "@/modules/editorial/accept-prepared-proposal-command";
 import { createTopicRequestCommand } from "@/modules/discovery/topic-request-command";
 import { createAcceptSourceFromSubmissionCommand } from "@/modules/evidence/accept-source-from-submission-command";
+import { createHumanRevisionCommand } from "@/modules/editorial/create-human-revision-command";
 
 import {
   DrizzleEditorialRepository,
@@ -17,6 +18,7 @@ import {
 } from "./content-repositories";
 import { DrizzleAcceptPreparedProposalRepository } from "./accept-prepared-proposal-repository";
 import { DrizzleAcceptSourceFromSubmissionRepository } from "./accept-source-from-submission-repository";
+import { DrizzleHumanRevisionRepository } from "./human-revision-repository";
 import { DrizzleTopicRequestDemandRepository } from "./topic-request-repository";
 import { createPostgresPersistence, type PostgresPersistence } from "./postgres";
 import {
@@ -25,6 +27,7 @@ import {
   briefings,
   claimSupports,
   claims,
+  humanRevisionCreationRecords,
   proposalDecisionRecords,
   sourceSubmissions,
   topics,
@@ -133,6 +136,25 @@ describe("Postgres editorial workflow", () => {
       ],
     });
     await expect(editorial.listAuditRecords(briefing.id)).resolves.toHaveLength(4);
+  });
+
+  it("creates an idempotent human-origin revision from the locked current Draft", async () => {
+    const runId = randomUUID();
+    const [topic] = await persistence.db.insert(topics).values({ slug: `human-revision-${runId}`, title: "Human revision test", description: "An isolated revision fixture." }).returning({ id: topics.id });
+    const [briefing] = await persistence.db.insert(briefings).values({ topicId: topic.id, templateVersion: "v1", status: "draft" }).returning({ id: briefings.id });
+    const [firstRevision] = await persistence.db.insert(briefingRevisions).values({ briefingId: briefing.id, sequence: 1, templateVersion: "v1", content: templateContent, origin: "human", createdBy: "postgres-integration-test" }).returning({ id: briefingRevisions.id });
+    const command = createHumanRevisionCommand(new DrizzleHumanRevisionRepository(persistence.db));
+    const input = { idempotencyKey: `human-revision:${runId}`, briefingId: briefing.id, expectedRevisionId: firstRevision.id, actorId: "postgres-integration-test", occurredAt: "2026-08-09T10:00:00.000Z", note: "Improved explanation.", content: { ...templateContent, fiveMinuteExplanation: "A revised fuller explanation." } };
+
+    const first = await command.create(input);
+    const replay = await command.create(input);
+    expect(first).toMatchObject({ ok: true, kind: "created", sequence: 2 });
+    expect(replay).toMatchObject({ ok: true, kind: "idempotent", sequence: 2 });
+    if (!first.ok || !replay.ok) throw new Error("The human revision should be created.");
+    expect(replay.revisionId).toBe(first.revisionId);
+    await expect(persistence.db.select().from(briefingRevisions).where(eq(briefingRevisions.id, first.revisionId))).resolves.toContainEqual(expect.objectContaining({ origin: "human", createdBy: "postgres-integration-test", sourceSubmissionId: null, aiProvider: null, aiModel: null, promptVersion: null, inputProvenance: null, generationOutput: null, sequence: 2 }));
+    await expect(persistence.db.select().from(humanRevisionCreationRecords).where(eq(humanRevisionCreationRecords.briefingRevisionId, first.revisionId))).resolves.toContainEqual(expect.objectContaining({ briefingId: briefing.id, expectedRevisionId: firstRevision.id, actorId: "postgres-integration-test", note: "Improved explanation." }));
+    await expect(command.create({ ...input, idempotencyKey: `human-revision:stale:${runId}` })).resolves.toEqual({ ok: false, reason: "revision-conflict" });
   });
 
   it("folds accepted Topic requests into one privacy-bounded demand aggregate", async () => {
