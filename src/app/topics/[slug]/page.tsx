@@ -28,6 +28,10 @@ function formatReviewedDate(date: string) {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
+function formatUpdateDate(date: string) {
+  return new Intl.DateTimeFormat("en-SG", { day: "numeric", month: "long", year: "numeric" }).format(new Date(date));
+}
+
 function getConceptMap(
   explainers: readonly BriefingVisualExplainer[],
 ): ConceptMapExplainer | undefined {
@@ -264,6 +268,26 @@ export default async function TopicPage({ params }: TopicPageProps) {
                   </section>
                 </div>
               </section>
+
+              {briefing.currentUpdates && briefing.currentUpdates.length > 0 ? (
+                <section className="current-updates" aria-labelledby="current-updates-heading">
+                  <p className="section-kicker">What has changed</p>
+                  <h2 id="current-updates-heading">Current Updates</h2>
+                  <p>These are dated developments. They sit alongside, rather than change, the evergreen Briefing above.</p>
+                  <ol>
+                    {briefing.currentUpdates.map((update) => (
+                      <li key={update.id}>
+                        <p className="current-update-date">Effective {formatUpdateDate(update.effectiveAt)}</p>
+                        <h3>{update.title}</h3>
+                        <p>{update.body}</p>
+                        <ul className="current-update-sources" aria-label={`Sources for ${update.title}`}>
+                          {update.sources.map((source) => <li key={source.url}><a href={source.url} rel="noreferrer" target="_blank">{source.title}</a><span>{source.publisher}</span></li>)}
+                        </ul>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              ) : null}
 
               <footer className="trust-footer" id="sources" aria-labelledby="sources-heading">
                 <p className="section-kicker">Check the support</p>

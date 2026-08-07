@@ -36,6 +36,7 @@ describe("mapPublishedBriefing", () => {
           { title: "Constitution", publisher: "SSO", url: "https://sso.example/constitution" },
           { title: "Constitution", publisher: "SSO", url: "https://sso.example/constitution" },
         ],
+        currentUpdates: [{ id: "update-1", title: "A dated development", body: "A concise explanation.", effectiveAt: "2026-08-08T00:00:00.000Z", sources: [{ title: "Update source", publisher: "SSO", url: "https://sso.example/update" }] }],
       }),
     ).toEqual({
       slug: "government",
@@ -44,7 +45,7 @@ describe("mapPublishedBriefing", () => {
       templateVersion: "v1",
       ...templateContent,
       sources: [{ title: "Constitution", publisher: "SSO", url: "https://sso.example/constitution" }],
-      currentUpdates: [],
+      currentUpdates: [{ id: "update-1", title: "A dated development", body: "A concise explanation.", effectiveAt: "2026-08-08T00:00:00.000Z", sources: [{ title: "Update source", publisher: "SSO", url: "https://sso.example/update" }] }],
       lastReviewedAt: "2026-08-07",
     });
   });

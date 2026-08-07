@@ -120,6 +120,15 @@ p { margin: 0 0 20px; }
 .government-flow > ol p { margin: 2px 0 0; }
 .policy-example { border-left: 4px solid var(--color-ink); padding: 20px 22px 4px; background: var(--color-kopi-foam); }
 .policy-example p { font-size: .95rem; }
+.current-updates { border-top: 3px solid var(--color-coral, #e46d54); padding-top: 26px; }
+.current-updates > p:not(.section-kicker) { max-width: 640px; color: var(--color-muted); }
+.current-updates > ol { margin: 24px 0 0; padding: 0; list-style: none; }
+.current-updates > ol > li { border-top: 1px solid var(--color-mist); padding: 20px 0; }
+.current-updates > ol > li:last-child { border-bottom: 1px solid var(--color-mist); }
+.current-update-date { margin: 0 0 6px; color: var(--color-rain); font-family: var(--utility-face); font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.current-updates h3 { font-family: var(--reading-face); font-size: 1.28rem; }
+.current-update-sources { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 0; padding: 0; list-style: none; font-family: var(--utility-face); font-size: .78rem; }
+.current-update-sources li { display: flex; gap: 5px; }.current-update-sources a { color: var(--color-rain); font-weight: 750; }.current-update-sources span { color: var(--color-muted); }
 .trust-footer { border-top: 1px solid var(--color-ink); padding-top: 28px; }
 .source-intro, .footer-note { color: var(--color-muted); }
 .source-list { margin: 0 0 28px; padding: 0; list-style: none; }

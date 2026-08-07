@@ -15,6 +15,7 @@ import {
 } from "../../modules/editorial/editorial-repository";
 import type {
   BriefingSource,
+  PublishedCurrentUpdate,
   PublishedBriefing,
 } from "@/modules/content/published-briefings";
 
@@ -24,6 +25,8 @@ import {
   briefings,
   claimSupports,
   claims,
+  currentUpdateSupports,
+  currentUpdates,
   editorialAuditRecords,
   topics,
 } from "./schema";
@@ -84,6 +87,7 @@ export type PublishedBriefingDatabaseRecord = Readonly<{
   content: unknown;
   publishedAt: Date;
   sources: ReadonlyArray<BriefingSource>;
+  currentUpdates?: ReadonlyArray<PublishedCurrentUpdate>;
 }>;
 
 /**
@@ -109,7 +113,7 @@ export function mapPublishedBriefing(
     templateVersion: "v1",
     ...content,
     sources: uniqueSources(record.sources),
-    currentUpdates: [],
+    currentUpdates: record.currentUpdates ?? [],
     lastReviewedAt: record.publishedAt.toISOString().slice(0, 10),
   };
 }
@@ -126,6 +130,7 @@ export class DrizzlePublishedCatalogueRepository implements PublishedCatalogueRe
     const [briefing] = await this.db
       .select({
         briefingId: briefings.id,
+        topicId: topics.id,
         slug: topics.slug,
         title: topics.title,
         templateVersion: briefings.templateVersion,
@@ -177,6 +182,22 @@ export class DrizzlePublishedCatalogueRepository implements PublishedCatalogueRe
       .innerJoin(acceptedSources, eq(acceptedSources.id, claimSupports.acceptedSourceId))
       .where(eq(claims.briefingRevisionId, publication.revisionId));
 
+    const updateRows = await this.db
+      .select({
+        id: currentUpdates.id,
+        title: currentUpdates.title,
+        body: currentUpdates.body,
+        effectiveAt: currentUpdates.effectiveAt,
+        sourceTitle: acceptedSources.title,
+        sourcePublisher: acceptedSources.publisher,
+        sourceUrl: acceptedSources.canonicalUrl,
+      })
+      .from(currentUpdates)
+      .innerJoin(currentUpdateSupports, eq(currentUpdateSupports.currentUpdateId, currentUpdates.id))
+      .innerJoin(acceptedSources, eq(acceptedSources.id, currentUpdateSupports.acceptedSourceId))
+      .where(and(eq(currentUpdates.topicId, briefing.topicId), eq(currentUpdates.status, "published")))
+      .orderBy(desc(currentUpdates.effectiveAt));
+
     return mapPublishedBriefing({
       slug: briefing.slug,
       title: briefing.title,
@@ -184,8 +205,19 @@ export class DrizzlePublishedCatalogueRepository implements PublishedCatalogueRe
       content: revision.content,
       publishedAt: publication.occurredAt,
       sources: sourceRows,
+      currentUpdates: mapPublishedCurrentUpdates(updateRows),
     });
   }
+}
+
+function mapPublishedCurrentUpdates(rows: ReadonlyArray<Readonly<{ id: string; title: string; body: string; effectiveAt: Date; sourceTitle: string; sourcePublisher: string; sourceUrl: string }>>): ReadonlyArray<PublishedCurrentUpdate> {
+  const updates = new Map<string, { id: string; title: string; body: string; effectiveAt: string; sources: BriefingSource[] }>();
+  for (const row of rows) {
+    const update = updates.get(row.id) ?? { id: row.id, title: row.title, body: row.body, effectiveAt: row.effectiveAt.toISOString(), sources: [] };
+    update.sources.push({ title: row.sourceTitle, publisher: row.sourcePublisher, url: row.sourceUrl });
+    updates.set(row.id, update);
+  }
+  return [...updates.values()].map((update) => ({ ...update, sources: uniqueSources(update.sources) }));
 }
 
 /** Drizzle implementation of atomic editorial state-and-audit persistence. */
