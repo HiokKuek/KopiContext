@@ -17,6 +17,10 @@ import {
   createEditorialClaim,
   type EditorialClaimSubmission,
 } from "@/platform/web/editorial-claim-bff";
+import {
+  createCurrentUpdateWithSupport,
+  type CurrentUpdateSubmission,
+} from "@/platform/web/current-update-bff";
 
 export type EditorialTransitionActionState =
   | Readonly<{ kind: "idle"; message: "" }>
@@ -26,6 +30,7 @@ export type EditorialSourceActionState =
   | Readonly<{ kind: "idle" | "invalid" | "rejected" | "unavailable"; message: string }>
   | Readonly<{ kind: "success"; message: string; acceptedSourceId: string }>;
 export type EditorialClaimActionState = Readonly<{ kind: "idle"; message: "" }> | EditorialClaimSubmission;
+export type CurrentUpdateActionState = Readonly<{ kind: "idle"; message: "" }> | CurrentUpdateSubmission;
 
 export async function acceptEditorialSourceAction(
   briefingId: string,
@@ -75,6 +80,42 @@ export async function createEditorialClaimAction(
     briefingRevisionId,
     acceptedSourceId,
     claim: { statement, excerpt, rationale },
+  });
+  if (result.kind === "success") {
+    revalidatePath(`/editor/briefings/${briefingId}`);
+    revalidatePath("/editor");
+  }
+  return result;
+}
+
+export async function createCurrentUpdateAction(
+  briefingId: string,
+  _previous: CurrentUpdateActionState,
+  form: FormData,
+): Promise<CurrentUpdateActionState> {
+  const editor = await requireEditorForAction();
+  if (form.get("confirm-current-update") !== "create") {
+    return { kind: "invalid", message: "Confirm that you have checked this update against the accepted Source." };
+  }
+
+  const title = text(form.get("title"));
+  const body = text(form.get("body"));
+  const effectiveAt = toIso(text(form.get("effectiveAt")));
+  const acceptedSourceId = text(form.get("acceptedSourceId"));
+  const excerpt = text(form.get("excerpt"));
+  const rationale = text(form.get("rationale"));
+  if (!title || !body || !effectiveAt || !acceptedSourceId || !excerpt || !rationale) {
+    return { kind: "invalid", message: "Complete the update, effective date, Source, exact excerpt, and rationale." };
+  }
+
+  const result = await createCurrentUpdateWithSupport(editor, {
+    briefingId,
+    title,
+    body,
+    effectiveAt,
+    acceptedSourceId,
+    excerpt,
+    rationale,
   });
   if (result.kind === "success") {
     revalidatePath(`/editor/briefings/${briefingId}`);
