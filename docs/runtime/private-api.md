@@ -110,6 +110,19 @@ call these routes; it must never forward this credential to a browser.
 
 ## Source-submission command
 
+### Review prepared proposals
+
+`GET /v1/editorial/source-submissions/:submissionId` is a private,
+editor-only read contract. It returns submission provenance and, when available,
+proposed Topic/Subtopic placement, confidence/rationale, candidate Claims with
+excerpts, and a structured draft proposal. Every one of these values is a
+suggestion: it is not an accepted Source or Claim, canonical taxonomy,
+editorial revision, or published content. Its server projection excludes raw
+material, processor prompts, fingerprints, leases, retries, and worker error
+internals. The protected `/editor/source-submissions/:submissionId` page uses
+the contract through a server-only BFF and exposes no acceptance command until
+that explicit workflow exists.
+
 ## Source Submission editorial reads
 
 Production also exposes authenticated `GET /v1/editorial/source-submissions`

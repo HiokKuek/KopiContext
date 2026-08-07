@@ -202,8 +202,24 @@ p { margin: 0 0 20px; }
 .material-receipt > p:not(.section-kicker):not(.material-receipt-id) { max-width: 590px; color: var(--color-muted); line-height: 1.58; }
 .material-receipt-id { border-top: 1px solid var(--color-mist); border-bottom: 1px solid var(--color-mist); padding: 11px 0; font-family: var(--utility-face); font-size: .8rem; }
 .material-receipt-id code { overflow-wrap: anywhere; color: var(--color-ink); }
+.submission-review-shell { max-width: 980px; }
+.submission-review-heading { max-width: 760px; padding-bottom: 34px; }
+.submission-review-heading > p:last-child { max-width: 650px; margin: 16px 0 0; font-size: 1.1rem; }
+.submission-review-layout { display: grid; gap: 28px; }
+.submission-review-reading > section { margin-bottom: 48px; }
+.submission-provenance { border-top: 3px solid var(--color-ink); padding-top: 22px; }
+.submission-provenance dl, .proposal-classification dl { margin: 0; border-top: 1px solid var(--color-mist); }
+.submission-provenance dl > div, .proposal-classification dl > div { display: grid; grid-template-columns: minmax(105px, .42fr) minmax(0, 1fr); gap: 12px; border-bottom: 1px solid var(--color-mist); padding: 12px 0; }
+.submission-provenance dt, .proposal-classification dt { color: var(--color-muted); font-family: var(--utility-face); font-size: .76rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.submission-provenance dd, .proposal-classification dd { margin: 0; overflow-wrap: anywhere; }
+.suggestion-guardrail { align-self: start; border: 1px dashed var(--color-rain); border-left: 4px solid var(--color-rain); padding: 22px; background: color-mix(in srgb, var(--color-kopi-foam) 58%, #fffdf8); }
+.suggestion-guardrail h2 { font-size: 1.45rem; }.suggestion-guardrail p:not(.section-kicker) { color: var(--color-muted); font-size: .9rem; line-height: 1.52; }
+.submission-awaiting { border-left: 4px solid var(--color-mist); padding: 18px 22px; background: #fffdf8; }
+.candidate-claims { margin: 0; padding: 0; list-style: none; }.candidate-claims li { border-top: 1px solid var(--color-mist); padding: 18px 0; }.candidate-claims li:last-child { border-bottom: 1px solid var(--color-mist); }.candidate-claims h3 { font-family: var(--reading-face); font-size: 1.14rem; }.candidate-claims p { margin: 10px 0 2px; font-family: var(--utility-face); font-size: .82rem; }.candidate-claims small { color: var(--color-muted); font-family: var(--utility-face); font-size: .8rem; }.candidate-claims blockquote { margin: 12px 0 0; border-left: 2px solid var(--color-mist); padding: 4px 0 4px 14px; color: var(--color-muted); font-size: .95rem; font-style: italic; }
+.proposal-template { color: var(--color-muted); font-family: var(--utility-face); font-size: .83rem; }.proposed-draft { border-top: 1px solid var(--color-mist); }.proposed-draft > section { border-bottom: 1px solid var(--color-mist); padding: 17px 0; }.proposed-draft h3 { font-family: var(--utility-face); }.proposed-draft p { margin: 0; white-space: pre-wrap; }
 @media (min-width: 540px) { .topic-request-controls { grid-template-columns: minmax(0, 1fr) auto; } .topic-request-controls button { min-width: 172px; } }
 @media (min-width: 760px) { .briefing-shell { padding-top: 72px; } .government-map { grid-template-columns: minmax(0, .85fr) minmax(350px, 1.15fr); align-items: center; gap: 44px; } .branch-diagram ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 31px; padding-top: 18px; } .branch-diagram ol::before { top: 0; right: 16.66%; bottom: auto; left: 16.66%; width: auto; height: 2px; } .branch-diagram li { min-height: 118px; padding: 22px 14px 14px; } .branch-diagram li::before { top: -22px; left: 50%; width: 2px; height: 21px; border-top: 0; border-left: 2px solid var(--color-mist); } .branch-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } .context-pair, .participate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 980px) { .reading-grid { grid-template-columns: 190px minmax(0, 730px); gap: 64px; } .conversation-path { position: sticky; top: 24px; align-self: start; overflow: visible; border-bottom: 0; padding: 4px 0 0; } .conversation-path ol { display: block; width: auto; } .conversation-path li { min-width: 0; border-left: 2px solid var(--color-mist); } .conversation-path a { padding: 0 0 20px 16px; } }
 @media (min-width: 900px) { .review-layout { grid-template-columns: minmax(0, 1fr) 310px; gap: 54px; } .decision-panel { position: sticky; top: 24px; } }
+@media (min-width: 900px) { .submission-review-layout { grid-template-columns: minmax(0, 1fr) 290px; gap: 54px; } .suggestion-guardrail { position: sticky; top: 24px; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

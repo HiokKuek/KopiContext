@@ -44,7 +44,9 @@ taxonomy, or publish. A human editor is always the approval gate.
 - Deliberate workflow actions: Draft → Needs verification → In editorial
   review → Approved → Published → Archived.
 - A protected Source Submission form. New material is queued durably; workers
-  may prepare proposals, but no worker can publish automatically.
+  may prepare proposals, but no worker can publish automatically. The editor
+  can inspect provenance and proposed placement, Claims, and draft as clearly
+  unaccepted suggestions.
 
 ## Architecture at a glance
 
