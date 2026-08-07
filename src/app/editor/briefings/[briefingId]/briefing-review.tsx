@@ -30,6 +30,7 @@ export function BriefingReview({
             <span className="status-token">{review.briefing.status.replaceAll("-", " ")}</span>
             Revision {review.revision.sequence} · {review.revision.origin} draft · Last activity {formatDate(review.freshness.lastActivityAt)}
           </p>
+          {review.briefing.status === "draft" ? <Link className="editor-revise-link" href={`/editor/briefings/${review.briefing.id}/revise`}>Edit this draft →</Link> : null}
         </header>
 
         <div className="review-layout">

@@ -145,6 +145,20 @@ p { margin: 0 0 20px; }
 .editor-back-link { display: inline-block; margin-bottom: 22px; color: var(--color-rain); font-family: var(--utility-face); font-size: .85rem; font-weight: 750; }
 .review-heading { max-width: 780px; padding-bottom: 32px; }
 .review-heading .briefing-meta { margin-top: 18px; }
+.editor-revise-link { display: inline-block; margin-top: 18px; border-bottom: 2px solid var(--color-rain); padding-bottom: 2px; color: var(--color-ink); font-family: var(--utility-face); font-size: .85rem; font-weight: 800; text-decoration: none; }
+.editor-revise-link:hover { color: var(--color-rain); }
+.revision-shell { max-width: 840px; }
+.revision-heading { max-width: 690px; padding-bottom: 28px; }
+.revision-heading > p:last-child { max-width: 610px; margin: 16px 0 0; color: var(--color-muted); }
+.revision-slip { border: 1px solid var(--color-mist); border-top: 5px solid var(--color-rain); padding: 28px; background: #fffdf8; box-shadow: 8px 8px 0 color-mix(in srgb, var(--color-rain) 9%, transparent); }
+.revision-slip fieldset { display: grid; gap: 16px; margin: 0; padding: 0; border: 0; }
+.revision-slip legend { margin-bottom: 10px; font-family: var(--reading-face); font-size: 1.45rem; font-weight: 700; }
+.revision-slip label { display: grid; gap: 6px; font-family: var(--utility-face); font-size: .82rem; font-weight: 800; }
+.revision-slip input, .revision-slip textarea { width: 100%; border: 1px solid var(--color-muted); border-radius: 4px; padding: 10px 12px; background: var(--color-paper); color: var(--color-ink); font: inherit; font-weight: 400; }
+.revision-slip textarea { resize: vertical; }
+.revision-slip input:focus-visible, .revision-slip textarea:focus-visible, .revision-slip button:focus-visible { outline: 3px solid var(--color-rain); outline-offset: 2px; }
+.revision-status { min-height: 1.5em; margin: 0; color: #82502a; font-family: var(--utility-face); font-size: .86rem; font-weight: 700; }
+.revision-status-success { color: var(--color-rain); }
 .review-layout { display: grid; gap: 28px; }
 .review-reading > section { margin-bottom: 48px; scroll-margin-top: 24px; }
 .template-checklist, .review-claims, .review-sources, .audit-list { margin: 0; padding: 0; list-style: none; }
