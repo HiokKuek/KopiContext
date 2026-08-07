@@ -435,6 +435,7 @@ export const claimSupports = pgTable(
     index("claim_supports_source_idx").on(table.acceptedSourceId),
   ],
 );
+export const editorialClaimCreationRecords = pgTable("editorial_claim_creation_records", { id: uuid("id").defaultRandom().primaryKey(), idempotencyKey: text("idempotency_key").notNull().unique(), claimId: uuid("claim_id").notNull().references(() => claims.id, { onDelete: "restrict", onUpdate: "cascade" }), claimSupportId: uuid("claim_support_id").notNull().references(() => claimSupports.id, { onDelete: "restrict", onUpdate: "cascade" }), actorId: text("actor_id").notNull(), occurredAt: timestamp("occurred_at", { withTimezone: true, mode: "date" }).notNull(), createdAt }, (t)=>[check("editorial_claim_creation_records_actor_not_empty",sql`length(${t.actorId}) > 0`)]);
 
 /**
  * An append-only editorial record. The application writes it in the same
