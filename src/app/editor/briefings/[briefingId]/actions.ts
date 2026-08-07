@@ -20,6 +20,8 @@ import {
 import {
   createCurrentUpdateWithSupport,
   type CurrentUpdateSubmission,
+  submitCurrentUpdateTransition,
+  type CurrentUpdateTransitionSubmission,
 } from "@/platform/web/current-update-bff";
 
 export type EditorialTransitionActionState =
@@ -31,6 +33,7 @@ export type EditorialSourceActionState =
   | Readonly<{ kind: "success"; message: string; acceptedSourceId: string }>;
 export type EditorialClaimActionState = Readonly<{ kind: "idle"; message: "" }> | EditorialClaimSubmission;
 export type CurrentUpdateActionState = Readonly<{ kind: "idle"; message: "" }> | CurrentUpdateSubmission;
+export type CurrentUpdateTransitionActionState = Readonly<{ kind: "idle"; message: "" }> | CurrentUpdateTransitionSubmission;
 
 export async function acceptEditorialSourceAction(
   briefingId: string,
@@ -117,6 +120,27 @@ export async function createCurrentUpdateAction(
     excerpt,
     rationale,
   });
+  if (result.kind === "success") {
+    revalidatePath(`/editor/briefings/${briefingId}`);
+    revalidatePath("/editor");
+  }
+  return result;
+}
+
+export async function transitionCurrentUpdateAction(
+  briefingId: string,
+  currentUpdateId: string,
+  _previous: CurrentUpdateTransitionActionState,
+  form: FormData,
+): Promise<CurrentUpdateTransitionActionState> {
+  const editor = await requireEditorForAction();
+  const result = await submitCurrentUpdateTransition(
+    editor,
+    currentUpdateId,
+    form.get("action"),
+    form.get("reason"),
+    form.get("confirm-publication"),
+  );
   if (result.kind === "success") {
     revalidatePath(`/editor/briefings/${briefingId}`);
     revalidatePath("/editor");

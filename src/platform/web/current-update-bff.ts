@@ -14,6 +14,20 @@ export type CurrentUpdateSubmission =
   | Readonly<{ kind: "success"; currentUpdateId: string; supportId: string }>
   | Readonly<{ kind: "invalid" | "rejected" | "unavailable"; message: string }>;
 
+export type CurrentUpdateTransitionSubmission =
+  | Readonly<{ kind: "success"; status: string }>
+  | Readonly<{ kind: "invalid" | "rejected" | "unavailable"; message: string }>;
+
+const transitionTargets = {
+  "move-to-needs-verification": "needs-verification",
+  "start-editorial-review": "in-editorial-review",
+  "return-to-draft": "draft",
+  approve: "approved",
+  publish: "published",
+  archive: "archived",
+  restore: "approved",
+} as const;
+
 /**
  * Creates a Current Update and immediately attaches its reviewed evidence.
  * Both private API calls remain independently idempotent; this BFF never
@@ -98,6 +112,54 @@ export async function createCurrentUpdateWithSupport(
       kind: "unavailable",
       message: "The editorial service is unavailable. The update was not sent for review.",
     };
+  }
+}
+
+export async function submitCurrentUpdateTransition(
+  editor: EditorIdentity,
+  currentUpdateId: string,
+  action: unknown,
+  reason: unknown,
+  confirmation: unknown,
+  dependencies: Readonly<{
+    api?: Pick<PrivateApiClient, "command">;
+    env?: Readonly<Record<string, string | undefined>>;
+  }> = {},
+): Promise<CurrentUpdateTransitionSubmission> {
+  if (!isUuid(currentUpdateId) || typeof action !== "string" || !(action in transitionTargets)) {
+    return { kind: "invalid", message: "This Current Update action is no longer valid. Refresh and try again." };
+  }
+  if (action === "publish" && confirmation !== "publish") {
+    return { kind: "invalid", message: "Confirm publication before publishing this Current Update." };
+  }
+  if (typeof reason !== "string" && reason !== null && reason !== undefined) {
+    return { kind: "invalid", message: "The reason must be plain text of 2,000 characters or fewer." };
+  }
+  const preparedReason = typeof reason === "string" ? reason.trim() : undefined;
+  if ((action === "return-to-draft" || action === "move-to-needs-verification" || action === "archive") && !preparedReason) {
+    return { kind: "invalid", message: "Add a short reason before making this change." };
+  }
+  if (preparedReason && preparedReason.length > 2_000) {
+    return { kind: "invalid", message: "The reason must be plain text of 2,000 characters or fewer." };
+  }
+
+  try {
+    const api = dependencies.api ?? createPrivateApiClient({
+      baseUrl: required(dependencies.env, "PRIVATE_API_BASE_URL"),
+      serviceCredential: required(dependencies.env, "PRIVATE_API_SERVICE_CREDENTIAL"),
+    });
+    const value = await api.command<unknown>({
+      path: `/v1/editorial/current-updates/${encodeURIComponent(currentUpdateId)}/transitions`,
+      method: "POST",
+      body: { to: transitionTargets[action as keyof typeof transitionTargets], actorId: editor.actorId, ...(preparedReason ? { reason: preparedReason } : {}) },
+    });
+    if (!isRecord(value) || typeof value.status !== "string") throw new Error("Invalid Current Update transition response.");
+    return { kind: "success", status: value.status };
+  } catch (error) {
+    if (error instanceof PrivateApiClientError && ["conflict", "not_found", "validation_failed", "bad_request"].includes(error.code)) {
+      return { kind: "rejected", message: "This change was not applied. Refresh the Current Update and review its evidence." };
+    }
+    return { kind: "unavailable", message: "The editorial service is unavailable. No change was made." };
   }
 }
 

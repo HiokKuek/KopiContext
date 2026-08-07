@@ -80,6 +80,24 @@ export type EditorialClaim = Readonly<{
   supports: ReadonlyArray<EditorialClaimSupport>;
 }>;
 
+export type EditorialCurrentUpdate = Readonly<{
+  id: string;
+  title: string;
+  body: string;
+  effectiveAt: string;
+  status: EditorialStatus;
+  supports: ReadonlyArray<Readonly<{
+    id: string;
+    sourceId: string;
+    title: string;
+    publisher: string;
+    canonicalUrl: string;
+    excerpt: string;
+    rationale: string;
+  }>>;
+  allowedActions: ReadonlyArray<EditorialWorkflowAction>;
+}>;
+
 export type EditorialFreshness = Readonly<{
   lastActivityAt: string;
   reviewAgeDays: number;
@@ -105,6 +123,7 @@ export type EditorialBriefingReview = Readonly<{
   templateSections: ReadonlyArray<TemplateSectionState>;
   claims: ReadonlyArray<EditorialClaim>;
   acceptedSources: ReadonlyArray<EditorialEvidenceSource>;
+  currentUpdates?: ReadonlyArray<EditorialCurrentUpdate>;
   freshness: EditorialFreshness;
   auditRecords: ReadonlyArray<EditorialAuditRecord>;
   allowedActions: ReadonlyArray<EditorialWorkflowAction>;
