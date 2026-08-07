@@ -293,15 +293,6 @@ step "Set your chosen hostname. For Service, choose HTTP and enter api:3001. Sav
 step "Do not point the route at localhost, the OMV IP address, or an exposed port."
 pause "Press Enter after Cloudflare reports the connector healthy and the route is saved."
 
-stage "GitHub Actions deployment runner"
-say "Use a repository-level runner only. The workflow never runs this runner for pull requests."
-open_url "https://github.com/HiokKuek/KopiContext/settings/actions/runners/new"
-step "Choose Linux and x64, then copy the current download and extraction commands from GitHub."
-step "Run them as kopi-deploy in /opt/actions-runner. In the final config command add: --labels kopi-private-deploy"
-step "After configuration, as root run: /opt/actions-runner/svc.sh install kopi-deploy && /opt/actions-runner/svc.sh start"
-step "Return to GitHub and confirm the runner is Idle with the kopi-private-deploy label."
-pause "Press Enter after the runner is online."
-
 stage "GitHub protection and Vercel handoff"
 open_url "https://github.com/HiokKuek/KopiContext/settings/environments"
 step "Create the home-production environment and require your approval before deployment."
@@ -312,5 +303,15 @@ step "In the KopiContext project's Production environment, set server-only PRIVA
 step "Set PRIVATE_API_SERVICE_CREDENTIAL to the exact credential entered in Stage 3. Also set Google OAuth and editor variables from .env.example."
 step "Redeploy Vercel, then visit the public site and sign in as the configured editor."
 say "Finally, verify Docker-side health with: $REPOSITORY_ROOT/scripts/deploy-private-runtime.sh"
+pause "Press Enter after the approval gate and Vercel values are configured."
+
+stage "GitHub Actions deployment runner"
+say "Set the approval gate first. Use a repository-level runner only; the workflow never runs it for pull requests."
+open_url "https://github.com/HiokKuek/KopiContext/settings/actions/runners/new"
+step "Choose Linux and x64, then copy the current download and extraction commands from GitHub."
+step "Run them as kopi-deploy in /opt/actions-runner. In the final config command add: --labels kopi-private-deploy"
+step "After configuration, as root run: /opt/actions-runner/svc.sh install kopi-deploy && /opt/actions-runner/svc.sh start"
+step "Return to GitHub and confirm the runner is Idle with the kopi-private-deploy label."
+pause "Press Enter after the runner is online."
 
 finish

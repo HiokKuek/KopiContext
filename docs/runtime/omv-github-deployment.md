@@ -32,9 +32,9 @@ The guided script does the host-only portions in this order:
 5. collects the separate Cloudflare tunnel token into
    `/etc/kopicontext/cloudflared.env` (mode 600), runs its connector, and
    directs you to add a route with HTTP service `api:3001`;
-6. walks you through registering the repository-level GitHub runner; and
-7. opens the GitHub and Vercel pages for the final protection and environment
-   settings.
+6. opens the GitHub and Vercel pages for the final protection and environment
+   settings; and
+7. only then walks you through registering the repository-level GitHub runner.
 
 The wizard never writes a runtime secret to the repository, GitHub Actions,
 or Vercel automatically. Use `openssl rand -hex 36` for database passwords and
