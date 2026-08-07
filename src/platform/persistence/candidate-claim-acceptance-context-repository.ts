@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import {
@@ -15,7 +15,8 @@ import { acceptedSources, briefingRevisions, briefings, sourceSubmissions, topic
 
 /**
  * Deliberately scoped evidence-review adapter. It reads only the requested
- * Submission, agent revisions created from it, and Sources accepted from it;
+ * Submission, the agent-created draft and later human revisions of that same
+ * Briefing, and Sources accepted from it;
  * it never selects submitted text, retrieval fingerprints, prompts, worker
  * leases, retries, or other Submissions.
  */
@@ -45,7 +46,14 @@ export class DrizzleCandidateClaimAcceptanceContextRepository
       return { kind: "proposal-unavailable" };
     }
 
+    const originatingRevisions = await this.db
+      .select({ briefingId: briefingRevisions.briefingId })
+      .from(briefingRevisions)
+      .where(and(eq(briefingRevisions.sourceSubmissionId, submissionId), eq(briefingRevisions.origin, "agent")));
+    const briefingIds = [...new Set(originatingRevisions.map((revision) => revision.briefingId))];
+
     const [revisions, sources] = await Promise.all([
+      briefingIds.length === 0 ? Promise.resolve([]) :
       this.db
         .select({
           id: briefingRevisions.id,
@@ -60,7 +68,10 @@ export class DrizzleCandidateClaimAcceptanceContextRepository
         .from(briefingRevisions)
         .innerJoin(briefings, eq(briefings.id, briefingRevisions.briefingId))
         .innerJoin(topics, eq(topics.id, briefings.topicId))
-        .where(and(eq(briefingRevisions.sourceSubmissionId, submissionId), eq(briefingRevisions.origin, "agent")))
+        // A human revision is an immutable successor of the original agent
+        // draft. It needs the same separately reviewed evidence, but it must
+        // not inherit Claims silently.
+        .where(inArray(briefingRevisions.briefingId, briefingIds))
         .orderBy(asc(briefingRevisions.createdAt)),
       this.db
         .select({
@@ -89,7 +100,7 @@ export class DrizzleCandidateClaimAcceptanceContextRepository
         },
         proposal: prepared,
         revisionsCreatedFromSubmission: revisions.flatMap((revision) => {
-          const draftTitle = draftTitleFrom(revision.content);
+          const draftTitle = draftTitleFrom(revision.content) ?? revision.topicTitle;
           return draftTitle === undefined
             ? []
             : [{

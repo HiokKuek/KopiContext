@@ -148,8 +148,8 @@ complete.
 `GET /v1/editorial/source-submissions/:submissionId/candidate-claim-context`
 is the BFF-only read contract for the narrow Candidate-Claim acceptance panel.
 It returns only a reviewable prepared/needs-review proposal, its indexed
-candidate Claims, agent-origin revisions created from that same Source
-Submission, and Sources accepted from that same Source Submission. Empty
+candidate Claims, the original agent revision and later human revisions of
+that same Briefing, and Sources accepted from that same Source Submission. Empty
 revision or Source lists are valid: they mean the BFF must keep Claim
 acceptance unavailable.
 

@@ -172,7 +172,8 @@ alter a Briefing, or publish.
 
 Candidate-Claim acceptance needs a focused private read model before its editor
 control is built. The editor must be able to select a candidate, a revision
-created from the same Source Submission, and a Source accepted from the same
+created from the same Source Submission (including later human revisions of
+that Briefing), and a Source accepted from the same
 Source Submission by their meaningful labels—not by copying opaque IDs.
 
 The private API exposes this BFF-only query:
@@ -256,7 +257,8 @@ Source selection, or publish control in this panel.
 #### Narrow implementation plan
 
 1. Add a framework-independent editor query port and Postgres adapter that
-   joins the prepared Source Submission to its agent-origin revisions and
+   joins the prepared Source Submission to the original agent revision and
+   later human revisions of that same Briefing, and
    Accepted Sources by `source_submission_id` / `accepted_from_submission_id`.
 2. Add the private Fastify query with an explicit projection of the DTO above;
    test absent, non-ready, empty-target, and populated contexts.
