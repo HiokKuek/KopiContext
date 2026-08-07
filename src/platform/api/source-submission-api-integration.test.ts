@@ -17,7 +17,7 @@ const publicCatalogue: PublicCatalogueQuery = {
 const validBody = {
   idempotencyKey: "submission:government-video:v1",
   submission: {
-    id: "submission-government-video",
+    id: "123e4567-e89b-12d3-a456-426614174000",
     kind: "transcript",
     originalIdentifier: "https://example.com/video-transcript",
     submittedBy: "editor-ernest",
@@ -44,8 +44,8 @@ describe("source-submission private API composition", () => {
   }
 
   it("requires a private service credential before accepting a source submission", async () => {
-    const prepare = vi.fn();
-    const response = await createApp({ prepare }).inject({
+    const queue = vi.fn();
+    const response = await createApp({ queue }).inject({
       method: "POST",
       url: "/v1/source-submissions",
       payload: validBody,
@@ -55,18 +55,17 @@ describe("source-submission private API composition", () => {
     expect(response.json()).toEqual({
       error: { code: "unauthorized", message: "A valid service credential is required." },
     });
-    expect(prepare).not.toHaveBeenCalled();
+    expect(queue).not.toHaveBeenCalled();
   });
 
   it("exposes the composed command only to an authenticated private service", async () => {
-    const prepare = vi.fn().mockResolvedValue({
-      state: "failed",
+    const queue = vi.fn().mockResolvedValue({
+      state: "queued",
       idempotencyKey: validBody.idempotencyKey,
-      submission: validBody.submission,
-      history: [],
-      failure: "retrieval-failed",
+      submissionId: validBody.submission.id,
+      queuedAt: "2026-08-07T10:00:00.000Z",
     });
-    const response = await createApp({ prepare }).inject({
+    const response = await createApp({ queue }).inject({
       method: "POST",
       url: "/v1/source-submissions",
       headers: { authorization: "Bearer test-credential" },
@@ -74,6 +73,6 @@ describe("source-submission private API composition", () => {
     });
 
     expect(response.statusCode).toBe(202);
-    expect(prepare).toHaveBeenCalledWith(validBody);
+    expect(queue).toHaveBeenCalledWith(validBody);
   });
 });

@@ -33,6 +33,16 @@ describe("private API runtime composition", () => {
     });
     expect(topicRequest.statusCode).toBe(400);
 
+    // Production also composes durable source intake. Invalid transport input
+    // proves the route exists without trying to use the fake database.
+    const sourceSubmission = await runtime.app.inject({
+      method: "POST",
+      url: "/v1/source-submissions",
+      headers: { authorization: `Bearer ${serviceCredential}` },
+      payload: {},
+    });
+    expect(sourceSubmission.statusCode).toBe(400);
+
     // The query exists in production composition, and the shared credential
     // gate is applied before any substitute persistence object is touched.
     const editorQueue = await runtime.app.inject({

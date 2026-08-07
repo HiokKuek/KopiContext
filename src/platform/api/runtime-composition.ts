@@ -3,12 +3,14 @@ import type { FastifyInstance } from "fastify";
 import { getPublishedBriefingBySlug } from "@/modules/content/published-briefings";
 import { createTopicRequestCommand } from "@/modules/discovery/topic-request-command";
 import { createEditorialWorkflowCommand } from "@/modules/editorial/editorial-workflow-command";
+import { createSourceSubmissionIntakeCommand } from "@/modules/preparation/source-submission-intake";
 import {
   DrizzleEditorialRepository,
   DrizzlePublishedCatalogueRepository,
 } from "@/platform/persistence/content-repositories";
 import { DrizzleEditorialReadRepository } from "@/platform/persistence/editorial-read-repository";
 import { DrizzleTopicRequestDemandRepository } from "@/platform/persistence/topic-request-repository";
+import { DrizzleSourceSubmissionIntakeRepository } from "@/platform/persistence/source-submission-intake-repository";
 import {
   createPostgresPersistence,
   type PostgresPersistence,
@@ -60,10 +62,12 @@ export function composePrivateApiRuntime(
   );
   const editorialRepository = new DrizzleEditorialRepository(persistence.db);
   const topicRequestDemands = new DrizzleTopicRequestDemandRepository(persistence.db);
+  const sourceSubmissionIntake = new DrizzleSourceSubmissionIntakeRepository(persistence.db);
   const app = buildPrivateApi({
     serviceAuthenticator: authenticator,
     publicCatalogue: new DrizzlePublishedCatalogueRepository(persistence.db),
     editorialBriefingTransitions: createEditorialWorkflowCommand(editorialRepository),
+    sourceSubmissions: createSourceSubmissionIntakeCommand(sourceSubmissionIntake),
     editorialReadModels: new DrizzleEditorialReadRepository(persistence.db),
     topicRequests: createTopicRequestCommand(topicRequestDemands),
   });

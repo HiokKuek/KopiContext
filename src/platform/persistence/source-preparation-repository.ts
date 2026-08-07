@@ -1,4 +1,4 @@
-import { and, eq, inArray, ne, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, or } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import type {
@@ -33,7 +33,10 @@ export class DrizzleSourcePreparationRepository
       .where(eq(sourceSubmissions.idempotencyKey, idempotencyKey))
       .limit(1);
 
-    return row ? mapPersistedSourcePreparation(row) : undefined;
+    // A queue record is deliberately not a completed preparation outcome.
+    // A worker will claim it later; callers must not mistake it for an AI
+    // result or skip the work because the intake record already exists.
+    return row?.preparationResultState ? mapPersistedSourcePreparation(row) : undefined;
   }
 
   /**
@@ -49,6 +52,38 @@ export class DrizzleSourcePreparationRepository
 
     if (inserted.length === 1) {
       return result;
+    }
+
+    const [pending] = await this.db
+      .select()
+      .from(sourceSubmissions)
+      .where(
+        and(
+          eq(sourceSubmissions.idempotencyKey, result.idempotencyKey),
+          eq(sourceSubmissions.id, submissionFor(result).id),
+          isNull(sourceSubmissions.preparationResultState),
+        ),
+      )
+      .limit(1);
+
+    if (pending) {
+      const terminal = sourcePreparationPersistenceValues(
+        withExistingHistory(result, asHistory(pending.processingHistory)),
+      );
+      const { id: _id, ...terminalValues } = terminal;
+      const [finalized] = await this.db
+        .update(sourceSubmissions)
+        .set(terminalValues)
+        .where(
+          and(
+            eq(sourceSubmissions.idempotencyKey, result.idempotencyKey),
+            eq(sourceSubmissions.id, pending.id),
+            isNull(sourceSubmissions.preparationResultState),
+          ),
+        )
+        .returning();
+
+      if (finalized) return mapPersistedSourcePreparation(finalized);
     }
 
     const existing = await this.findByIdempotencyKey(result.idempotencyKey);
@@ -189,6 +224,13 @@ function submissionFor(result: SourcePreparationResult): SourceSubmissionForPrep
   return result.state === "failed" ? result.submission : result.provenance.submission;
 }
 
+function withExistingHistory(
+  result: SourcePreparationResult,
+  history: ReadonlyArray<PreparationTrace>,
+): SourcePreparationResult {
+  return { ...result, history: [...history, ...result.history] } as SourcePreparationResult;
+}
+
 function persistedSubmission(row: SourceSubmissionRow): SourceSubmissionForPreparation {
   return {
     id: row.id,
@@ -251,7 +293,8 @@ function asHistory(value: unknown): PreparationTrace[] {
 function isTrace(value: unknown): value is PreparationTrace {
   if (!isRecord(value)) return false;
   return (
-    (value.stage === "retrieved" ||
+    (value.stage === "queued" ||
+      value.stage === "retrieved" ||
       value.stage === "deduplicated" ||
       value.stage === "prepared" ||
       value.stage === "escalated" ||

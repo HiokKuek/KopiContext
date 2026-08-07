@@ -23,6 +23,8 @@ development mode.
   review queries; and
 - `DrizzleTopicRequestDemandRepository` and the aggregate-only Topic-request
   command for authenticated BFF handoffs; and
+- `DrizzleSourceSubmissionIntakeRepository` and the source-intake command,
+  which durably queues Source Submissions for a later private worker; and
 - a Postgres pool that is closed alongside Fastify during shutdown.
 
 Run that production-shaped composition only with an isolated local, staging,
@@ -105,16 +107,15 @@ call these routes; it must never forward this credential to a browser.
 
 ## Source-submission command
 
-When the API composition root supplies the source-submission command port,
-`POST /v1/source-submissions` accepts a private, idempotent submission for
-preparation. Its body is deliberately explicit so the original identifier,
+In production, `POST /v1/source-submissions` accepts a private, idempotent
+submission and durably queues it. Its body is deliberately explicit so the original identifier,
 submitter, timestamp, and rights note become retained provenance:
 
 ```json
 {
   "idempotencyKey": "submission:government-video:v1",
   "submission": {
-    "id": "submission-government-video",
+    "id": "123e4567-e89b-12d3-a456-426614174000",
     "kind": "transcript",
     "originalIdentifier": "https://example.com/video-transcript",
     "submittedBy": "editor-ernest",
@@ -124,11 +125,31 @@ submitter, timestamp, and rights note become retained provenance:
 }
 ```
 
-The command responds `202 Accepted` with the preparation outcome. The outcome
-is a proposal for editorial review; it does not accept a Source, alter the
-Topic taxonomy, or publish content. Unknown or incomplete fields receive a
-`400` response using the stable `invalid_request` error envelope. A caller can
-retry the same idempotency key without triggering a second preparation.
+The command responds `202 Accepted` with only a safe queue acknowledgement:
+
+```json
+{
+  "submission": {
+    "state": "queued",
+    "idempotencyKey": "submission:government-video:v1",
+    "submissionId": "...",
+    "queuedAt": "2026-08-07T09:30:01.000Z"
+  }
+}
+```
+
+Queueing does not retrieve a URL or document, call an AI provider, propose a
+Topic, create a draft, accept a Source, create a Claim, or publish content. A
+retry with the same idempotency key returns the original acknowledgement and
+does not create another queue record. Unknown or incomplete fields receive a
+`400` response using the stable `invalid_request` error envelope.
+
+The later private worker must atomically claim `submitted` records by moving
+them to `processing`, then use the source-preparation application seam and its
+durable result store to finalise the same record. Its retrieval and provider
+ports remain intentionally uncomposed until rights-cleared provider adapters,
+queue scheduling, retry policy, and operational monitoring have been reviewed.
+Do not add retrieval or AI calls to this HTTP command.
 
 ## Local development source preparation
 
@@ -148,11 +169,11 @@ or an external AI provider.
   production draft, accept Sources, alter taxonomy, or publish.
 
 This adapter is not automatically composed by `api:start`, and must never be
-used as production provider wiring. The production private runtime still needs
-reviewed retrieval, provider, Source Submission persistence, queue, and
-operational adapters. Until those are deliberately composed, the private
-source-submission endpoint is absent rather than accepting a non-durable or
-placeholder workflow.
+used as production provider wiring. The production runtime now provides durable
+Source Submission intake only. It still needs reviewed retrieval, provider,
+worker claim/scheduling, retry, and operational adapters before it can prepare
+material. Until those are composed, the queued submission remains pending
+rather than being processed by a placeholder workflow.
 
 Feature endpoints must call application use cases. Do not put HTTP request,
 Fastify, header, or credential logic into `src/modules/`.

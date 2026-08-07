@@ -18,15 +18,14 @@ describe("source-submission API route", () => {
     return app;
   }
 
-  it("passes a validated submission to the injected application command", async () => {
-    const prepare = vi.fn().mockResolvedValue({
-      state: "prepared",
+  it("passes a validated submission to the injected intake command and returns only a safe queue acknowledgement", async () => {
+    const queue = vi.fn().mockResolvedValue({
+      state: "queued",
       idempotencyKey: "submission:government-video:v1",
-      provenance: { submission: validBody.submission },
-      history: [],
-      proposal: { title: "A draft" },
+      submissionId: validBody.submission.id,
+      queuedAt: "2026-08-07T10:00:00.000Z",
     });
-    const response = await createApp({ prepare }).inject({
+    const response = await createApp({ queue }).inject({
       method: "POST",
       url: "/v1/source-submissions",
       payload: validBody,
@@ -34,20 +33,19 @@ describe("source-submission API route", () => {
 
     expect(response.statusCode).toBe(202);
     expect(response.json()).toEqual({
-      preparation: {
-        state: "prepared",
+      submission: {
+        state: "queued",
         idempotencyKey: "submission:government-video:v1",
-        provenance: { submission: validBody.submission },
-        history: [],
-        proposal: { title: "A draft" },
+        submissionId: validBody.submission.id,
+        queuedAt: "2026-08-07T10:00:00.000Z",
       },
     });
-    expect(prepare).toHaveBeenCalledWith(validBody);
+    expect(queue).toHaveBeenCalledWith(validBody);
   });
 
-  it("rejects malformed or incomplete request bodies without invoking preparation", async () => {
-    const prepare = vi.fn();
-    const response = await createApp({ prepare }).inject({
+  it("rejects malformed or incomplete request bodies without invoking intake", async () => {
+    const queue = vi.fn();
+    const response = await createApp({ queue }).inject({
       method: "POST",
       url: "/v1/source-submissions",
       payload: {
@@ -63,26 +61,26 @@ describe("source-submission API route", () => {
         message: "The source-submission request is invalid.",
       },
     });
-    expect(prepare).not.toHaveBeenCalled();
+    expect(queue).not.toHaveBeenCalled();
   });
 
   it("rejects unrecognised fields so callers cannot silently lose provenance", async () => {
-    const prepare = vi.fn();
-    const response = await createApp({ prepare }).inject({
+    const queue = vi.fn();
+    const response = await createApp({ queue }).inject({
       method: "POST",
       url: "/v1/source-submissions",
       payload: { ...validBody, accidentalField: "not recorded" },
     });
 
     expect(response.statusCode).toBe(400);
-    expect(prepare).not.toHaveBeenCalled();
+    expect(queue).not.toHaveBeenCalled();
   });
 });
 
 const validBody = {
   idempotencyKey: "submission:government-video:v1",
   submission: {
-    id: "submission-government-video",
+    id: "123e4567-e89b-12d3-a456-426614174000",
     kind: "transcript",
     originalIdentifier: "https://example.com/video-transcript",
     submittedBy: "editor-ernest",
