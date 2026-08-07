@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   getPublishedBriefingBySlug,
-  type CivicGovernmentModel,
+  type BriefingVisualExplainer,
+  type ConceptMapExplainer,
 } from "@/modules/content/published-briefings";
 
 type TopicPageProps = {
@@ -23,6 +24,94 @@ function formatReviewedDate(date: string) {
     month: "long",
     year: "numeric",
   }).format(new Date(`${date}T00:00:00Z`));
+}
+
+function getConceptMap(
+  explainers: readonly BriefingVisualExplainer[],
+): ConceptMapExplainer | undefined {
+  return explainers.find(
+    (explainer): explainer is ConceptMapExplainer => explainer.kind === "concept-map",
+  );
+}
+
+function ConceptMapDiagram({ explainer }: { explainer: ConceptMapExplainer }) {
+  return (
+    <section className="government-map" aria-labelledby={`${explainer.id}-map-heading`}>
+      <div className="government-map-intro">
+        <p className="section-kicker">The big picture</p>
+        <h2 id={`${explainer.id}-map-heading`}>{explainer.title}</h2>
+        <p>{explainer.introduction}</p>
+      </div>
+      <div className="branch-diagram" aria-label={`${explainer.centralLabel}: ${explainer.nodes.map((node) => node.label).join(", ")}`}>
+        <div className="diagram-root">{explainer.centralLabel}</div>
+        <ol>
+          {explainer.nodes.map((node) => (
+            <li key={node.id}>
+              <strong>{node.label}</strong>
+              <span>{node.summary}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+function ConceptMapCards({ explainer }: { explainer: ConceptMapExplainer }) {
+  return (
+    <section className="branch-section" aria-labelledby={`${explainer.id}-cards-heading`}>
+      <p className="section-kicker">The parts of the picture</p>
+      <h2 id={`${explainer.id}-cards-heading`}>Look at each part</h2>
+      <div className="branch-cards">
+        {explainer.nodes.map((node) => (
+          <section className="branch-card" key={node.id} aria-labelledby={`${explainer.id}-${node.id}-heading`}>
+            <p className="branch-label">{node.label}</p>
+            <h3 id={`${explainer.id}-${node.id}-heading`}>{node.summary}</h3>
+            {node.details.length > 0 ? <p><strong>Who belongs here:</strong> {node.details.join(", ")}.</p> : null}
+            {node.note ? <p className="branch-note">{node.note}</p> : null}
+            {node.example ? <p className="branch-example">{node.example}</p> : null}
+            {node.learnMoreLabel ? <a href="#key-terms">{node.learnMoreLabel}</a> : null}
+          </section>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SupportingVisualExplainers({ explainers }: { explainers: readonly BriefingVisualExplainer[] }) {
+  return explainers.map((explainer) => {
+    switch (explainer.kind) {
+      case "comparison":
+        return (
+          <section className="role-comparison" key={explainer.id} aria-labelledby={`${explainer.id}-heading`}>
+            <p className="section-kicker">A useful distinction</p>
+            <h2 id={`${explainer.id}-heading`}>{explainer.title}</h2>
+            {explainer.introduction ? <p>{explainer.introduction}</p> : null}
+            {explainer.question ? <h3>{explainer.question}</h3> : null}
+            {explainer.answer ? <p>{explainer.answer}</p> : null}
+            <div className="table-scroll">
+              <table>
+                <thead><tr><th scope="col">{explainer.columns.label}</th><th scope="col">{explainer.columns.valueLabel}</th></tr></thead>
+                <tbody>{explainer.rows.map((row) => <tr key={row.label}><th scope="row">{row.label}</th><td>{row.value}</td></tr>)}</tbody>
+              </table>
+            </div>
+          </section>
+        );
+      case "process-flow":
+        return (
+          <section className="government-flow" key={explainer.id} aria-labelledby={`${explainer.id}-heading`}>
+            <p className="section-kicker">How the parts connect</p>
+            <h2 id={`${explainer.id}-heading`}>{explainer.title}</h2>
+            <p>{explainer.introduction}</p>
+            <ol>{explainer.steps.map((step, index) => <li key={step.title}><span aria-hidden="true">{index + 1}</span><p><strong>{step.title}.</strong> {step.explanation}</p></li>)}</ol>
+          </section>
+        );
+      case "contextual-callout":
+        return <aside className="policy-example" key={explainer.id} aria-labelledby={`${explainer.id}-heading`}><h3 id={`${explainer.id}-heading`}>{explainer.title}</h3><p>{explainer.body}</p></aside>;
+      case "concept-map":
+        return <ConceptMapCards explainer={explainer} key={explainer.id} />;
+    }
+  });
 }
 
 export async function generateMetadata({ params }: TopicPageProps): Promise<Metadata> {
@@ -48,7 +137,8 @@ export default async function TopicPage({ params }: TopicPageProps) {
   }
 
   const reviewedDate = formatReviewedDate(briefing.lastReviewedAt);
-  const governmentModel: CivicGovernmentModel | undefined = briefing.civicGovernmentModel;
+  const visualExplainers = briefing.visualExplainers ?? [];
+  const conceptMap = getConceptMap(visualExplainers);
 
   return (
     <>
@@ -74,24 +164,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
             </div>
           </header>
 
-          {governmentModel ? <section className="government-map" aria-labelledby="government-map-heading">
-            <div className="government-map-intro">
-              <p className="section-kicker">The big picture</p>
-              <h2 id="government-map-heading">Start with the map</h2>
-              <p>{governmentModel.introduction}</p>
-            </div>
-            <div className="branch-diagram" aria-label="Singapore Government has three branches: Legislature, Executive, and Judiciary">
-              <div className="diagram-root">Singapore Government</div>
-              <ol>
-                {governmentModel.branches.map((branch) => (
-                  <li key={branch.id}>
-                    <strong>{branch.name}</strong>
-                    <span>{branch.plainLanguagePurpose}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </section> : null}
+          {conceptMap ? <ConceptMapDiagram explainer={conceptMap} /> : null}
 
           <section className="overview" aria-labelledby="overview-heading">
             <p className="section-kicker">Start here</p>
@@ -121,55 +194,7 @@ export default async function TopicPage({ params }: TopicPageProps) {
                 <p>{briefing.fiveMinuteExplanation}</p>
               </section>
 
-              {governmentModel ? <>
-              <section className="branch-section" aria-labelledby="branches-heading">
-                <p className="section-kicker">The three branches</p>
-                <h2 id="branches-heading">Each branch has a different job</h2>
-                <div className="branch-cards">
-                  {governmentModel.branches.map((branch) => (
-                    <section className="branch-card" key={branch.id} aria-labelledby={`${branch.id}-heading`}>
-                      <p className="branch-label">{branch.name}</p>
-                      <h3 id={`${branch.id}-heading`}>{branch.plainLanguagePurpose}</h3>
-                      <p><strong>Who belongs here:</strong> {branch.institutions.join(", ")}.</p>
-                      <p className="branch-example">{branch.everydayExample}</p>
-                      <a href="#key-terms">{branch.learnMoreLabel}</a>
-                    </section>
-                  ))}
-                </div>
-              </section>
-
-              <section className="role-comparison" aria-labelledby="roles-heading">
-                <p className="section-kicker">A common mix-up</p>
-                <h2 id="roles-heading">{governmentModel.officeComparison.title}</h2>
-                <h3>{governmentModel.officeComparison.question}</h3>
-                <p>{governmentModel.officeComparison.answer}</p>
-                <div className="table-scroll">
-                  <table>
-                    <thead><tr><th scope="col">Role</th><th scope="col">Main purpose</th></tr></thead>
-                    <tbody>
-                      {governmentModel.officeComparison.roles.map((item) => (
-                        <tr key={item.role}><th scope="row">{item.role}</th><td>{item.purpose}</td></tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <section className="government-flow" aria-labelledby="flow-heading">
-                <p className="section-kicker">How the parts connect</p>
-                <h2 id="flow-heading">{governmentModel.policyFlow.title}</h2>
-                <p>{governmentModel.policyFlow.introduction}</p>
-                <ol>
-                  {governmentModel.policyFlow.steps.map((step, index) => (
-                    <li key={step.title}><span aria-hidden="true">{index + 1}</span><p><strong>{step.title}.</strong> {step.explanation}</p></li>
-                  ))}
-                </ol>
-                <aside className="policy-example" aria-labelledby="policy-example-heading">
-                  <h3 id="policy-example-heading">{governmentModel.policyFlow.exampleTitle}</h3>
-                  <p>{governmentModel.policyFlow.exampleSummary}</p>
-                </aside>
-              </section>
-              </> : null}
+              <SupportingVisualExplainers explainers={visualExplainers} />
 
               <section id="key-terms" aria-labelledby="terms-heading">
                 <h2 id="terms-heading">A few useful terms</h2>

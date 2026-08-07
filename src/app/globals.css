@@ -78,6 +78,7 @@ p { margin: 0 0 20px; }
 .branch-card:nth-child(2) .branch-label { color: var(--color-ink); }
 .branch-card:nth-child(3) .branch-label { color: #6e5127; }
 .branch-example { color: var(--color-muted); }
+.branch-note { border-left: 2px solid var(--color-mist); padding-left: 10px; color: var(--color-muted); font-size: .86rem !important; }
 .branch-card a { color: var(--color-rain); font-family: var(--utility-face); font-size: .83rem; font-weight: 750; }
 .role-comparison { border-top: 1px solid var(--color-mist); padding-top: 30px; }
 .table-scroll { overflow-x: auto; border: 1px solid var(--color-mist); }
