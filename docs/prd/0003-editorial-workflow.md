@@ -28,6 +28,7 @@ Provide an editorial workspace that manages Topics, Briefings, Current Updates, 
 - Civic Claims use a primary official Source where available; contested, interpretive, and current Claims require stronger corroboration.
 - The editorial application interface owns state-transition invariants, revision history, and audit records.
 - A Source Submission is durable provenance for supplied material, not a gate that forces an AI-preparation result before a sole editor can accept a Source or author supported Claims.
+- Current Updates are separate dated records with their own evidence and approval history. They use the same state vocabulary but cannot be inserted into, or silently revise, the evergreen Briefing; see [ADR 0007](../adr/0007-current-updates-as-dated-evidence.md).
 
 ## Testing Decisions
 
