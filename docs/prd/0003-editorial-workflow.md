@@ -8,7 +8,7 @@ A sole editor needs to safely turn agent-prepared material into credible publish
 
 ## Solution
 
-Provide an editorial workspace that manages Topics, Briefings, Current Updates, Sources, Claims, and revisions through an explicit Editorial Workflow.
+Provide an editorial workspace that manages Topics, Briefings, Current Updates, Sources, Claims, and revisions through an explicit Editorial Workflow. The editor can begin from reviewed material directly or from an agent-prepared proposal; automation is not a prerequisite for editorial work.
 
 ## User Stories
 
@@ -27,6 +27,7 @@ Provide an editorial workspace that manages Topics, Briefings, Current Updates, 
 - Editorial Approval is the only transition to Published and records editor identity, time, and the approved revision.
 - Civic Claims use a primary official Source where available; contested, interpretive, and current Claims require stronger corroboration.
 - The editorial application interface owns state-transition invariants, revision history, and audit records.
+- A Source Submission is durable provenance for supplied material, not a gate that forces an AI-preparation result before a sole editor can accept a Source or author supported Claims.
 
 ## Testing Decisions
 
